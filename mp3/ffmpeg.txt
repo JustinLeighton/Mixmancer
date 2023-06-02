@@ -1,0 +1,2 @@
+# Trim to last n seconds
+ffmpeg -sseof -n -i input.mp3 output.mp3

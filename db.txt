@@ -1,0 +1,22 @@
+scene	image	music	volume
+main	main.png		
+brookshire	brookshire_2.png	sc/Irish Tavern Music.mp3	
+longnight	longnight.png	sc/Irish Tavern Music.mp3	
+longnight2	longnight.png		
+battle0	main.png	sc/ForestNoche2.mp3	
+battle	main.png	sc/battle2.mp3	
+aftermath	main.png	sc/ForestNoche2.mp3	
+investigation	brookshire.png	sc/ForestDia.mp3	
+journey		sc/ForestDia.mp3	
+argentus	hermit_house.jpg	sc/ForestDia.mp3	
+bromwood	basement_1.png	sc/ForestDia.mp3	
+bollormae	house_1.jpg	sc/ForestDia.mp3	
+boriv	mill_1.jpg	sc/ForestDia.mp3	
+maeve	tavern_1.jpg	sc/DND Tavern Ambience.mp3	
+regis	alchemist.jpg	sc/ForestDia.mp3	
+lyle	manor.jpg	sc/ForestDia.mp3	
+merric	brookshire.png	sc/ForestDia.mp3	
+milo	brookshire.png	sc/ForestDia.mp3	
+bella	kitchen_1.jpg	sc/ForestDia.mp3	
+willow	wizard_room.jpg	sc/ForestDia.mp3	
+flyingfish	tavern_1.jpg	sc/DND Tavern Ambience.mp3	
