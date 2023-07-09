@@ -2,3 +2,5 @@
 *.wav
 *.png
 *.jpg
+*.pyc
+__pycache__
