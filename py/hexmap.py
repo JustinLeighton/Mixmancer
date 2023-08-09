@@ -18,6 +18,7 @@ class hexMap():
         self.stagger = self.gridLoc[0] % 2 == 0 # True = 1-3-3, False = 3-3-1
         self.sideLength = 2 * ((self.hexSize / 2) / math.tan(math.pi / 3))
         self.update()
+        self.fog = True
         
         
     def debug(self):
@@ -63,6 +64,14 @@ class hexMap():
         with open('map/history.txt', 'a') as f:
             f.write(f"{','.join([str(x) for x in self.gridLoc])}\n")
 
+
+    def drawFog(self):
+        pass
+    
+    
+    def loc(self):
+        print('Currently at', ', '.join([str(x) for x in self.gridLoc]))
+
     
     def move(self, direction: str):
         if direction in ['l', 'ul', 'ur', 'r', 'dr', 'dl']:
@@ -88,7 +97,7 @@ class hexMap():
                 
             self.update()
             self.logMovement()
-            print('Moving to ', ', '.join([str(x) for x in self.gridLoc]))
+            print('Moving to', ', '.join([str(x) for x in self.gridLoc]))
         else:
             print('Wrong direction! Try l, ul, ur, r, dr, or dl.')
             
