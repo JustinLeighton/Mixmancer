@@ -18,7 +18,7 @@ class hexMap():
         self.stagger = self.gridLoc[0] % 2 == 0 # True = 1-3-3, False = 3-3-1
         self.sideLength = 2 * ((self.hexSize / 2) / math.tan(math.pi / 3))
         self.update()
-        self.fog = True
+        self.fog = False
         
         
     def debug(self):
@@ -65,9 +65,27 @@ class hexMap():
             f.write(f"{','.join([str(x) for x in self.gridLoc])}\n")
 
 
-    def drawFog(self):
+    def getHexOnScreen(self):
         pass
-    
+
+
+    def drawFog(self, screen):
+        with open('map/history.txt', 'r') as f:
+            log = f.read()
+        log = log.split('\n')[-10:]
+        hexes = self.getHexOnScreen()
+        
+        # Create adjacent tiles
+        clearTiles = set()
+        for x in log:
+            clearTiles.add(x)
+        
+        fogTiles = [x for x in hexes if x not in clearTiles]
+                
+        # Draw fog for each of fogTiles
+        for x in fogTiles:
+            pass
+        
     
     def loc(self):
         print('Currently at', ', '.join([str(x) for x in self.gridLoc]))
@@ -116,6 +134,8 @@ class hexMap():
         screen.fill((0, 0, 0))
         tmp = pygame.Surface((self.resolution[0], self.resolution[1]))
         tmp.blit(self.image, self.frame())
+        if self.fog:
+            self.drawFog(screen)
         screen.blit(tmp, (0, 0))
         pygame.draw.polygon(screen, color=(255, 215, 0), points=self.hexPoints(), width=3)
         pygame.display.update()

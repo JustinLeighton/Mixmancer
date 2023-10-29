@@ -8,8 +8,6 @@ Created on Thu May 18 23:31:42 2023
 import pygame
 from pygame import mixer
 import pandas as pd
-
-
 import sys
 sys.path.insert(1, './py')
 import hexmap
@@ -59,22 +57,6 @@ def main():
         # Exit command
         if user_input == 'exit':
             running = False
-            
-            
-        # Display command information
-        elif user_input == 'help':
-            print('''
-            So here's the deal...
-            
-            map\t\tDisplays hex map
-            \t\tInput "l", "ul", "ur", "r", "dr", "dl" to move on the map
-            \t\tInput "loc" for output of current grid location
-            \t\tInput "debug" for debug output
-            play *\tSets track to *. use "help" for * to get options
-            show *\tDisplays image to *. use "help" for * to get options
-            help\tFor help output, you just did this to get here...
-            exit\tExits mixmancer
-            ''')
             
 
         # Enter hexploration
