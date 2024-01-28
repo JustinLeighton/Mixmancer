@@ -35,11 +35,36 @@ class music_manager():
         else:
             self.print_help()
 
+
     def setVolume(self, level: float):
+        """
+        Set the volume level.
+
+        Args:
+        - level (float): Volume level between 0.0 and 1.0.
+        """
         try:
+            level = float(level)
             if 0.0 <= level <= 1.0:
-                mixer.set_volume(level)
+                mixer.music.set_volume(level)
             else:
                 raise ValueError("Volume level must be between 0.0 and 1.0.")
         except ValueError as e:
+            print(f"Error: {e}")
+
+
+    def setTimestamp(self, seconds: float):
+        """
+        Set the playback position in the currently loaded music.
+
+        Args:
+        - seconds (float): Timestamp in seconds.
+        """
+        try:
+            seconds = float(seconds)
+            if mixer.music.get_busy():
+                mixer.music.set_pos(seconds)
+            else:
+                raise RuntimeError("No music is currently playing.")
+        except Exception as e:
             print(f"Error: {e}")

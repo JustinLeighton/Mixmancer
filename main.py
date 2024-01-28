@@ -83,6 +83,11 @@ def main():
         # Change volume
         elif user_input[:3].lower() == 'vol':
             Music.setVolume(user_input.split(' ')[-1])
+
+
+        # Change music timestamp
+        elif user_input[:4].lower() == 'skip':
+            Music.setTimestamp(user_input.split(' ')[-1]) 
             
        
         # Change image
