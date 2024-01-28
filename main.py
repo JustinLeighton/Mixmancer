@@ -16,18 +16,18 @@ def main():
     # Load settings
     settings = load_settings()
 
-    # Initialize Screen
+    # Initialize screen
     pygame.init()
     resolution = (settings['WIDTH'], settings['HEIGHT'])
     screen = pygame.display.set_mode(resolution, flags=pygame.NOFRAME, display=settings['DISPLAY'])
 
-    # Initialize Music
+    # Initialize music manager
     Music = music_manager()
 
-    # Initialize hexmap
+    # Initialize hexmap placeholder
     hexMap = None
 
-    # Run the event loop to keep the window open
+    # Event loop
     running = True; user_input='map'
     while running:
 
@@ -43,7 +43,7 @@ def main():
             running = False
             
 
-        # Enter hexploration
+        # Hexploration commands
         elif user_input == 'map':
             with open('map/history.txt', 'r') as f:
                 for line in f:
@@ -53,14 +53,14 @@ def main():
             hexMap.blit(screen)
             
             
-        # Move on hex map
+        # Hexploration movement
         elif user_input in ['l', 'ul', 'ur', 'r', 'dr', 'dl'] and hexMap is not None:
             hexMap.move(user_input)
             hexMap.blit(screen)
             
 
         # Undo movement on hex map
-        elif user_input == 'undo':
+        elif user_input == 'undo' and hexMap is not None:
             hexMap.undoMovement()
             hexMap.blit(screen)
          
@@ -78,6 +78,11 @@ def main():
         # Change track
         elif user_input[:4].lower() == 'play':
            Music.play(user_input.split(' ')[-1])
+
+        
+        # Change volume
+        elif user_input[:3].lower() == 'vol':
+            Music.setVolume(user_input.split(' ')[-1])
             
        
         # Change image

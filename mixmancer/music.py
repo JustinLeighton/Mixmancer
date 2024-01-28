@@ -8,7 +8,6 @@ Created on Tue Aug  8 22:12:55 2023
 from pygame import mixer
 import os
 
-
 class music_manager():
     def __init__(self):
         mixer.init()
@@ -35,3 +34,12 @@ class music_manager():
             mixer.music.play(-1)
         else:
             self.print_help()
+
+    def setVolume(self, level: float):
+        try:
+            if 0.0 <= level <= 1.0:
+                mixer.set_volume(level)
+            else:
+                raise ValueError("Volume level must be between 0.0 and 1.0.")
+        except ValueError as e:
+            print(f"Error: {e}")
