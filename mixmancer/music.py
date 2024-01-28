@@ -9,7 +9,7 @@ from pygame import mixer
 import os
 
 
-class Music():
+class music_manager():
     def __init__(self):
         mixer.init()
     
@@ -35,4 +35,3 @@ class Music():
             mixer.music.play(-1)
         else:
             self.print_help()
-                

@@ -8,7 +8,7 @@ Created on Tue Aug  8 22:13:09 2023
 import pygame
 import os
 
-class Image():
+class image_manager():
     def __init__(self, image_input: str, resolution: tuple):
         self.status = False
         self.resolution = resolution
@@ -36,7 +36,7 @@ class Image():
         return self.status
     
     
-    def print_help(self):
+    def print_help(self) -> None:
         print('Images currently available:', *set([x.split('.')[0] for x in self.files]), sep='\n\t')
     
     

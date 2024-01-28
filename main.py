@@ -6,26 +6,10 @@ Created on Thu May 18 23:31:42 2023
 """
 
 import pygame
-from pygame import mixer
-import pandas as pd
-import sys
-sys.path.insert(1, './py')
-import hexmap
-import music
-import image
-
-
-# Load settings from file
-def load_settings():
-    with open('settings.txt') as f:
-        settings = f.read()
-    settings = settings.split('\n')
-    d = {}
-    for i in settings:
-        pair = i.split('=')
-        d[pair[0]]=int(pair[1])
-    return d
-
+from mixmancer.hexmap import generate_hexMap
+from mixmancer.music import music_manager
+from mixmancer.image import image_manager
+from mixmancer.config import load_settings, print_menu
 
 def main():
     
@@ -38,7 +22,7 @@ def main():
     screen = pygame.display.set_mode(resolution, flags=pygame.NOFRAME, display=settings['DISPLAY'])
 
     # Initialize Music
-    Music = music.Music()
+    Music = music_manager()
 
     # Initialize hexmap
     hexMap = None
@@ -65,7 +49,7 @@ def main():
                 for line in f:
                     pass
                 start = line.split(',')
-            hexMap = hexmap.hexMap('map/map.png', resolution, 56, (-2, -6), start)
+            hexMap = generate_hexMap('map/map.png', resolution, 56, (-2, -6), start)
             hexMap.blit(screen)
             
             
@@ -74,6 +58,12 @@ def main():
             hexMap.move(user_input)
             hexMap.blit(screen)
             
+
+        # Undo movement on hex map
+        elif user_input == 'undo':
+            hexMap.undoMovement()
+            hexMap.blit(screen)
+         
          
         # Debug hex map
         elif user_input == 'debug' and hexMap is not None:
@@ -92,7 +82,7 @@ def main():
        
         # Change image
         elif user_input[:4].lower() == 'show':
-            Image = image.Image(user_input.split(' ')[-1], resolution)
+            Image = image_manager(user_input.split(' ')[-1], resolution)
             if Image.get_status():
                 hexMap = None
                 Image.blit(screen)
@@ -100,18 +90,7 @@ def main():
         
         # Display command information
         else:
-            print('''
-            So here's the deal...
-            
-            map\t\tDisplays hex map
-            \t\tInput "l", "ul", "ur", "r", "dr", "dl" to move on the map
-            \t\tInput "loc" for output of current grid location
-            \t\tInput "debug" for debug output
-            play *\tSets track to *. use "help" for * to get options
-            show *\tDisplays image to *. use "help" for * to get options
-            help\tFor help output. You just did this to get here, or you're really struggling...
-            exit\tExits mixmancer
-            ''')
+            print_menu()
 
         # Prompt next user input
         if running:
