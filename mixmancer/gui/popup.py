@@ -10,14 +10,14 @@ class BasePopup(tk.Toplevel):
         super().__init__(master)
 
     def on_mouse_wheel(self, event):
-        self.yview_scroll(-1 * (event.delta // 120), "units")
+        self.yview_scroll(-1 * (event.delta // 120), 'units')
 
     def _open_popup(self):
         self.update_idletasks()  # Ensure the window is updated before getting its size
         popup_width = self.winfo_width()
         popup_height = self.winfo_height()
         x, y = self._get_mouse_position()
-        self.geometry(f"+{x-popup_width//2}+{y-popup_height//2}")  # Position the popup near the mouse cursor
+        self.geometry(f'+{x-popup_width//2}+{y-popup_height//2}')  # Position the popup near the mouse cursor
 
     def _get_mouse_position(self):
         screen_width = self.winfo_screenwidth()
@@ -35,17 +35,17 @@ class BasePopup(tk.Toplevel):
         scrollbar = ttk.Scrollbar(self, orient=tk.VERTICAL, command=canvas.yview)
         scrollable_frame = ttk.Frame(canvas)
 
-        scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        scrollable_frame.bind('<Configure>', lambda e: canvas.configure(scrollregion=canvas.bbox('all')))
+        canvas.create_window((0, 0), window=scrollable_frame, anchor='nw')
         canvas.configure(yscrollcommand=scrollbar.set)
 
         canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
         # Bind mouse wheel event to the canvas
-        canvas.bind_all("<MouseWheel>", lambda event: canvas.yview_scroll(-1 * (event.delta // 120), "units"))
+        canvas.bind_all('<MouseWheel>', lambda event: canvas.yview_scroll(-1 * (event.delta // 120), 'units'))
 
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.create_window((0, 0), window=scrollable_frame, anchor='nw')
         canvas.configure(yscrollcommand=scrollbar.set)
         return scrollable_frame
 
@@ -53,22 +53,22 @@ class BasePopup(tk.Toplevel):
 class ImagePopup(BasePopup):
     def __init__(self, master, callback, width=500, height=300):
         super().__init__(master)
-        self.title("Select Image")
+        self.title('Select Image')
         self.callback = callback
-        self.geometry(f"{width}x{height}")
+        self.geometry(f'{width}x{height}')
 
         # Load images
-        image_dir = "assets/img"
+        image_dir = 'assets/img'
         self.images = []
         for filename in os.listdir(image_dir):
-            if filename.endswith(".jpg"):
+            if filename.endswith('.jpg'):
                 try:
                     image_path = os.path.join(image_dir, filename)
                     image = Image.open(image_path)
                     image.thumbnail((100, 100))  # Resize image to fit button
                     self.images.append((filename, ImageTk.PhotoImage(image)))
                 except (OSError, IOError, Image.UnidentifiedImageError) as e:
-                    print(f"Error loading image '{filename}': {e}")
+                    print(f'Error loading image "{filename}": {e}')
 
         # Create buttons for each image
         scrollable_frame = self.make_scrollable(self)
@@ -88,12 +88,12 @@ class ImagePopup(BasePopup):
 class MusicPopup(BasePopup):
     def __init__(self, master, callback):
         super().__init__(master)
-        self.title("Select Music")
+        self.title('Select Music')
         self.callback = callback
-        self.music_dir = "assets/mp3"
+        self.music_dir = 'assets/mp3'
 
         # Load music files
-        self.music_files = [filename for filename in os.listdir(self.music_dir) if filename.endswith(".mp3")]
+        self.music_files = [filename for filename in os.listdir(self.music_dir) if filename.endswith('.mp3')]
 
         # Create buttons for each music file
         for i, filename in enumerate(self.music_files):
@@ -118,11 +118,11 @@ class MusicPopup(BasePopup):
 class SfxPopup(BasePopup):
     def __init__(self, master, volume):
         super().__init__(master)
-        self.title("Select Sound Effect")
-        self.sound_effects_dir = "assets/sfx"
+        self.title('Select Sound Effect')
+        self.sound_effects_dir = 'assets/sfx'
 
         # Load sound effects files
-        self.sound_effects_files = [filename for filename in os.listdir(self.sound_effects_dir) if filename.endswith(".wav")]
+        self.sound_effects_files = [filename for filename in os.listdir(self.sound_effects_dir) if filename.endswith('.wav')]
 
         # Create buttons for each sound effect file
         for i, filename in enumerate(self.sound_effects_files):
