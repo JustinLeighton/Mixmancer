@@ -21,6 +21,7 @@ from mixmancer.config.settings import LoadSettings
 from mixmancer.gui.popup import ImagePopup, MusicPopup, SfxPopup
 from mixmancer.display.image import ImageProjector
 
+
 class gui(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -51,14 +52,14 @@ class gui(tk.Tk):
         self.music_volume_slider.grid(row=2, column=1, padx=10, pady=5)
 
         # Sfx button
-        self.sound_effects_button = ttk.Button(self, text="Select Sound Effect", command=self.open_sound_effects_popup)
-        self.sound_effects_button.grid(row=2, column=0, padx=10, pady=5)
+        self.sound_effects_button = ttk.Button(self, text="Select Sfx", command=self.open_sound_effects_popup)
+        self.sound_effects_button.grid(row=4, column=0, padx=10, pady=5)
 
         # Sfx volume slider
-        self.sound_effects_volume_label = ttk.Label(self, text="Sound Effects Volume:")
-        self.sound_effects_volume_label.grid(row=4, column=0, padx=10, pady=5)
+        self.sound_effects_volume_label = ttk.Label(self, text="Sfx Volume:")
+        self.sound_effects_volume_label.grid(row=5, column=0, padx=10, pady=5)
         self.sound_effects_volume_slider = ttk.Scale(self, from_=0, to=100, orient="horizontal")
-        self.sound_effects_volume_slider.grid(row=4, column=1, padx=10, pady=5)
+        self.sound_effects_volume_slider.grid(row=5, column=1, padx=10, pady=5)
 
     def open_image_popup(self):
         def update_selected_image(selected_image):
@@ -93,109 +94,7 @@ class gui(tk.Tk):
         sound_effects_popup = SfxPopup(self)
         sound_effects_popup.grab_set()
 
-def main():
-    app = gui()
-    app.mainloop()
-
-
-# def main_old():
-    
-#     # Load settings
-#     settings = load_settings()
-
-#     # Initialize screen
-#     pygame.init()
-#     resolution = (settings['WIDTH'], settings['HEIGHT'])
-#     screen = pygame.display.set_mode(resolution, flags=pygame.NOFRAME, display=settings['DISPLAY'])
-
-#     # Initialize music manager
-#     Music = music_manager()
-
-#     # Initialize hexmap placeholder
-#     hexMap = None
-
-#     # Event loop
-#     running = True; user_input='map'
-#     while running:
-
-        
-#         # Exit condition
-#         for event in pygame.event.get():
-#             if event.type == pygame.QUIT:
-#                 running = False
-
-
-#         # Exit command
-#         if user_input == 'exit':
-#             running = False
-            
-
-#         # Hexploration commands
-#         elif user_input == 'map':
-#             with open('map/history.txt', 'r') as f:
-#                 for line in f:
-#                     pass
-#                 start = line.split(',')
-#             hexMap = generate_hexMap('map/map.png', resolution, 56, (-2, -6), start)
-#             hexMap.blit(screen)
-            
-            
-#         # Hexploration movement
-#         elif user_input in ['l', 'ul', 'ur', 'r', 'dr', 'dl'] and hexMap is not None:
-#             hexMap.move(user_input)
-#             hexMap.blit(screen)
-            
-
-#         # Undo movement on hex map
-#         elif user_input == 'undo' and hexMap is not None:
-#             hexMap.undoMovement()
-#             hexMap.blit(screen)
-         
-         
-#         # Debug hex map
-#         elif user_input == 'debug' and hexMap is not None:
-#             hexMap.debug()
-            
-        
-#         # Show current location
-#         elif user_input == 'loc' and hexMap is not None:
-#             hexMap.loc()
-        
-        
-#         # Change track
-#         elif user_input[:4].lower() == 'play':
-#            Music.play(user_input.split(' ')[-1])
-
-        
-#         # Change volume
-#         elif user_input[:3].lower() == 'vol':
-#             Music.setVolume(user_input.split(' ')[-1])
-
-
-#         # Change music timestamp
-#         elif user_input[:4].lower() == 'skip':
-#             Music.setTimestamp(user_input.split(' ')[-1]) 
-            
-       
-#         # Change image
-#         elif user_input[:4].lower() == 'show':
-#             Image = image_manager(user_input.split(' ')[-1], resolution)
-#             if Image.get_status():
-#                 hexMap = None
-#                 Image.blit(screen)
-            
-        
-#         # Display command information
-#         else:
-#             print_menu()
-
-#         # Prompt next user input
-#         if running:
-#             user_input = input('Next scene:')
-
-#     # Quit Pygame
-#     pygame.quit()
-
 
 if __name__=='__main__':
-    main() 
+    app = gui()
+    app.mainloop()

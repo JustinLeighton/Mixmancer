@@ -9,8 +9,10 @@ class BasePopup(tk.Toplevel):
     def __init__(self, master):
         super().__init__(master)
 
+    def on_mouse_wheel(self, event):
+        self.yview_scroll(-1 * (event.delta // 120), "units")
+
     def _open_popup(self):
-        # Open popup near the mouse cursor
         self.update_idletasks()  # Ensure the window is updated before getting its size
         popup_width = self.winfo_width()
         popup_height = self.winfo_height()
@@ -28,12 +30,32 @@ class BasePopup(tk.Toplevel):
         y = min(mouse_y, screen_height - self.winfo_height())
         return x, y
 
+    def make_scrollable(self, widget):
+        canvas = tk.Canvas(self)
+        scrollbar = ttk.Scrollbar(self, orient=tk.VERTICAL, command=canvas.yview)
+        scrollable_frame = ttk.Frame(canvas)
+
+        scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # Bind mouse wheel event to the canvas
+        canvas.bind_all("<MouseWheel>", lambda event: canvas.yview_scroll(-1 * (event.delta // 120), "units"))
+
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        return scrollable_frame
+
 
 class ImagePopup(BasePopup):
-    def __init__(self, master, callback):
+    def __init__(self, master, callback, width=500, height=300):
         super().__init__(master)
         self.title("Select Image")
         self.callback = callback
+        self.geometry(f"{width}x{height}")
 
         # Load images
         image_dir = "assets/img"
@@ -43,15 +65,16 @@ class ImagePopup(BasePopup):
                 try:
                     image_path = os.path.join(image_dir, filename)
                     image = Image.open(image_path)
-                    image.thumbnail((50, 50))  # Resize image to fit button
+                    image.thumbnail((100, 100))  # Resize image to fit button
                     self.images.append((filename, ImageTk.PhotoImage(image)))
                 except (OSError, IOError, Image.UnidentifiedImageError) as e:
                     print(f"Error loading image '{filename}': {e}")
 
         # Create buttons for each image
+        scrollable_frame = self.make_scrollable(self)
         for i, (filename, image) in enumerate(self.images):
-            button = ttk.Button(self, image=image, command=lambda idx=i: self.select_image(idx))
-            button.grid(row=i // 3, column=i % 3, padx=5, pady=5)
+            button = ttk.Button(scrollable_frame, image=image, command=lambda idx=i: self.select_image(idx))
+            button.grid(row=i // 4, column=i % 4, padx=5, pady=5)
 
         # Open popup near the mouse cursor
         self._open_popup()
@@ -77,7 +100,7 @@ class MusicPopup(BasePopup):
         for i, filename in enumerate(self.music_files):
             button = ttk.Button(self, text=filename, command=lambda idx=i: self.select_music(idx))
             button.grid(row=i, column=0, padx=5, pady=5)
-        
+
         # Open popup near the mouse cursor
         self._open_popup()
 

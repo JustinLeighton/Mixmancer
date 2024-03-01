@@ -8,7 +8,7 @@ Created on Tue Aug  8 22:12:55 2023
 from pygame import mixer
 import os
 
-class music_manager():
+class MusicManager():
     def __init__(self):
         mixer.init()
     
