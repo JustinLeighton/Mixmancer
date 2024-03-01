@@ -8,9 +8,9 @@ Created on Tue Aug  8 22:13:09 2023
 import pygame
 
 class ImageProjector():
-    def __init__(self, settings: dict):
-        self.resolution = (settings['WIDTH'], settings['HEIGHT'])
-        self.screen = pygame.display.set_mode(self.resolution, flags=pygame.NOFRAME, display=settings['DISPLAY'])
+    def __init__(self, resolution: tuple, display: int):
+        self.resolution = resolution
+        self.screen = pygame.display.set_mode(self.resolution, flags=pygame.NOFRAME, display=display)
         self.status = False
         self.resolution = self.resolution
 

@@ -4,10 +4,13 @@ from tkinter import ttk
 import os
 import pygame
 
+from mixmancer.config.settings import Settings
+
 
 class BasePopup(tk.Toplevel):
     def __init__(self, master):
         super().__init__(master)
+        self.configure(background=Settings().color['grey'])
 
     def on_mouse_wheel(self, event):
         self.yview_scroll(-1 * (event.delta // 120), 'units')

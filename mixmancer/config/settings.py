@@ -1,11 +1,14 @@
 
 # Load settings from file
-def LoadSettings():
-    with open('./assets/settings.txt') as f:
-        settings = f.read()
-    settings = settings.split('\n')
-    d = {}
-    for i in settings:
-        pair = i.split('=')
-        d[pair[0]]=int(pair[1])
-    return d
+class Settings():
+    def __init__(self):
+        self.width=1200
+        self.height=900
+        self.display=1
+        self.color = {
+            'white': '#ffffff',
+            'grey': '#36393f',
+            'purple': '#7289da',
+        }
+
+    
