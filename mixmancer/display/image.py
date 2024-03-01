@@ -6,7 +6,6 @@ Created on Tue Aug  8 22:13:09 2023
 """
 
 import pygame
-import os
 
 class ImageProjector():
     def __init__(self, settings: dict):
