@@ -1,6 +1,7 @@
+
 # Load settings from file
-def load_settings():
-    with open('settings.txt') as f:
+def LoadSettings():
+    with open('./assets/settings.txt') as f:
         settings = f.read()
     settings = settings.split('\n')
     d = {}
