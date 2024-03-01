@@ -48,18 +48,19 @@ class gui(tk.Tk):
         self.music_volume_label = ttk.Label(self, text="Music Volume:")
         self.music_volume_label.grid(row=2, column=0, padx=10, pady=5)
         self.music_volume_slider = ttk.Scale(self, from_=0, to=1, orient="horizontal", command=self.update_volume)
-        self.music_volume_slider.set(0.5)  # Default volume
+        self.music_volume_slider.set(0.5)
         self.music_volume_slider.grid(row=2, column=1, padx=10, pady=5)
 
         # Sfx button
-        self.sound_effects_button = ttk.Button(self, text="Select Sfx", command=self.open_sound_effects_popup)
-        self.sound_effects_button.grid(row=4, column=0, padx=10, pady=5)
+        self.sfx_button = ttk.Button(self, text="Select Sfx", command=self.open_sfx_popup)
+        self.sfx_button.grid(row=4, column=0, padx=10, pady=5)
 
         # Sfx volume slider
-        self.sound_effects_volume_label = ttk.Label(self, text="Sfx Volume:")
-        self.sound_effects_volume_label.grid(row=5, column=0, padx=10, pady=5)
-        self.sound_effects_volume_slider = ttk.Scale(self, from_=0, to=100, orient="horizontal")
-        self.sound_effects_volume_slider.grid(row=5, column=1, padx=10, pady=5)
+        self.sfx_volume_label = ttk.Label(self, text="Sfx Volume:")
+        self.sfx_volume_label.grid(row=5, column=0, padx=10, pady=5)
+        self.sfx_volume_slider = ttk.Scale(self, from_=0, to=1, orient="horizontal", command=self.set_sfx_volume)
+        self.sfx_volume_slider.set(0.5)
+        self.sfx_volume_slider.grid(row=5, column=1, padx=10, pady=5)
 
     def open_image_popup(self):
         def update_selected_image(selected_image):
@@ -88,11 +89,14 @@ class gui(tk.Tk):
         self.set_music_volume(float(volume))
 
     def set_music_volume(self, volume):
-        pygame.mixer.music.set_volume(volume)        
+        pygame.mixer.music.set_volume(volume) 
 
-    def open_sound_effects_popup(self):
-        sound_effects_popup = SfxPopup(self)
-        sound_effects_popup.grab_set()
+    def open_sfx_popup(self):
+        sfx_popup = SfxPopup(self, self.sfx_volume)
+        sfx_popup.grab_set()
+
+    def set_sfx_volume(self, volume):
+        self.sfx_volume = float(volume)
 
 
 if __name__=='__main__':

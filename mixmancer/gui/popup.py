@@ -86,11 +86,10 @@ class ImagePopup(BasePopup):
 
 
 class MusicPopup(BasePopup):
-    def __init__(self, master, callback, volume_control=None):
+    def __init__(self, master, callback):
         super().__init__(master)
         self.title("Select Music")
         self.callback = callback
-        self.volume_control = volume_control
         self.music_dir = "assets/mp3"
 
         # Load music files
@@ -102,17 +101,13 @@ class MusicPopup(BasePopup):
             button.grid(row=i, column=0, padx=5, pady=5)
 
         # Open popup near the mouse cursor
-        self._open_popup()
+        return self._open_popup()
 
     def select_music(self, index):
         selected_music = self.music_files[index]
         self.callback(selected_music)
         pygame.mixer.music.load(os.path.join(self.music_dir, selected_music))
         pygame.mixer.music.play()
-
-        # Adjust volume if volume control function is provided
-        if self.volume_control:
-            self.volume_control(pygame.mixer.music.get_volume())
 
         self.destroy()
 
@@ -121,7 +116,7 @@ class MusicPopup(BasePopup):
 
 
 class SfxPopup(BasePopup):
-    def __init__(self, master):
+    def __init__(self, master, volume):
         super().__init__(master)
         self.title("Select Sound Effect")
         self.sound_effects_dir = "assets/sfx"
@@ -131,14 +126,15 @@ class SfxPopup(BasePopup):
 
         # Create buttons for each sound effect file
         for i, filename in enumerate(self.sound_effects_files):
-            button = ttk.Button(self, text=filename, command=lambda idx=i: self.play_sound_effect(idx))
+            button = ttk.Button(self, text=filename, command=lambda idx=i: self.play_sound_effect(idx, volume))
             button.grid(row=i, column=0, padx=5, pady=5)
 
         # Open popup near the mouse cursor
         self._open_popup()
 
-    def play_sound_effect(self, index):
+    def play_sound_effect(self, index, volume):
         selected_sound_effect = self.sound_effects_files[index]
         sound_effect = pygame.mixer.Sound(os.path.join(self.sound_effects_dir, selected_sound_effect))
+        sound_effect.set_volume(volume)
         sound_effect.play()
         self.destroy()
