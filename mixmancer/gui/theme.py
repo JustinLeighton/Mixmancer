@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from PIL import Image, ImageTk
 
 class CustomTheme:
     def __init__(self, color):
@@ -44,3 +45,24 @@ class CustomSlider(ttk.Scale):
     def __init__(self, master=None, **kw):
         super().__init__(master, **kw)
         self.configure(style='Custom.Horizontal.TScale')
+
+class CustomImage(ttk.Label):
+    def __init__(self, master=None, image=None, **kw):
+        super().__init__(master, **kw)
+        self.image = image
+        self.configure_image()
+
+    def configure_image(self):
+        if self.image:
+            self.display_image()
+        else:
+            self.configure(text="N/A", font=("Helvetica", 12))
+
+    def display_image(self):
+        resized_image = self.image.resize((self.winfo_width(), self.winfo_height()), Image.ANTIALIAS)
+        self.photo_image = ImageTk.PhotoImage(resized_image)
+        self.configure(image=self.photo_image)
+
+    def resize_image(self, event):
+        if self.image:
+            self.display_image()
