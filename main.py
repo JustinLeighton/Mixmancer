@@ -18,10 +18,8 @@ import os
 import pygame
 
 from mixmancer.config.settings import Settings
-
 from mixmancer.gui.popup import ImagePopup, MusicPopup, SfxPopup
 from mixmancer.gui.theme import CustomTheme, CustomButton, CustomSlider, CustomLabel, CustomImage
-
 from mixmancer.display.image import ImageProjector
 from mixmancer.display.hexmap import HexMap
 
@@ -83,8 +81,23 @@ class gui(tk.Tk):
         self.hexmap_button = CustomButton(self.left_frame, text='Hexploration', command=self.open_hexmap)
         self.hexmap_button.grid(row=7, column=0, padx=10, pady=5)
 
+        # Hexmap movement buttons
+        button_info = {
+            'Upper Right': (8,0), 
+            'Upper Left': (9,0), 
+            'Right': (10,0), 
+            'Left': (11,0), 
+            'Lower Right': (12,0), 
+            'Lower Left': (13,0),
+            'Undo': (14,0),
+            'History': (15,0),
+            'Fog': (16,0)}
+        self.hexmap_buttons = []
+        for text, location in button_info.items():
+            button = CustomButton(self.left_frame, text=text, command=lambda btn=text: self.command_hexmap(btn))
+            self.hexmap_buttons.append((button, location))
+
     def open_image_popup(self):
-        self.hexmap_flag = False
         def update_selected_image(selected_image):
             image_path = os.path.join('assets/img', selected_image)
             self.projector.load_image(image_path)
@@ -97,6 +110,9 @@ class gui(tk.Tk):
 
         image_popup = ImagePopup(self, callback=update_selected_image)
         image_popup.grab_set()
+
+        if self.hexmap_flag:
+            self.toggle_hexmap_controls()
 
     def open_music_popup(self):
         def update_selected_music(selected_music):
@@ -125,14 +141,33 @@ class gui(tk.Tk):
 
     def open_hexmap(self):
         if not self.hexmap_flag:
-            image_path = self.hexmap.dump()
-            self.projector.load_image(image_path)
-            image = Image.open(image_path)
-            image.thumbnail((100, 100))
-            photo_image = ImageTk.PhotoImage(image)
-            self.selected_image_label.config(image=photo_image)
-            self.selected_image_label.image = photo_image
+            self.display_hexmap()
+            self.toggle_hexmap_controls()
+
+    def display_hexmap(self):
+        image_path = self.hexmap.dump()
+        self.projector.load_image(image_path)
+        image = Image.open(image_path)
+        image.thumbnail((100, 100))
+        photo_image = ImageTk.PhotoImage(image)
+        self.selected_image_label.config(image=photo_image)
+        self.selected_image_label.image = photo_image
+
+    def toggle_hexmap_controls(self):
+        if self.hexmap_flag:
+            self.hexmap_flag = False
+            for button, _ in self.hexmap_buttons:
+                button.grid_remove()
+        else:
             self.hexmap_flag = True
+            for button, location in self.hexmap_buttons:
+                print(location)
+                button.grid(row=location[0], column=location[1], padx=10, pady=5)
+    
+    def command_hexmap(self, direction: str):
+        self.hexmap.command(direction)
+        self.display_hexmap()
+        print(direction)
     
         
 def main():

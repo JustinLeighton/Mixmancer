@@ -4,5 +4,6 @@
 *.jpg
 *.jpeg
 *.pyc
+*.txt
 __pycache__
 .venv

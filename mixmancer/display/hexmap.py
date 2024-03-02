@@ -17,8 +17,8 @@ class HexMap():
         self.location_grid: list = [int(x) for x in start]
         self.side_length: float = 2 * ((self.hex_size / 2) / math.tan(math.pi / 3))
         self.update()
-        self.fog = False
-        self.hist = False
+        self.fog_flag = False
+        self.history_flag = False
         self.yellow = (255, 215, 0)
     
     def update(self):
@@ -69,7 +69,7 @@ class HexMap():
                 output.append(p)
         return output
 
-    def read_hist(self): # 23,141
+    def read_history(self): # 23,141
         with open('./assets/map/history.txt', 'r') as file:
             data = []
             for line in file:
@@ -90,32 +90,40 @@ class HexMap():
 
     def log_movement(self):
         with open('./assets/map/history.txt', 'a') as f:
-            f.write(f"{','.join([str(x) for x in self.gridLoc])}\n")
+            f.write(f"{','.join([str(x) for x in self.location_grid])}\n")
 
-    def move(self, direction: str):
-        if direction in ['l', 'ul', 'ur', 'r', 'dr', 'dl']:
-            if direction == 'l':
-                self.location_grid[1] -= 1
-            if direction == 'r':
-                self.location_grid[1] += 1
-            if direction == 'ul':
-                self.location_grid[0] -= 1
-                self.location_grid[1] -= not self.stagger
-            if direction == 'ur':
-                self.location_grid[0] -= 1
-                self.location_grid[1] += self.stagger
-            if direction == 'dl':
-                self.location_grid[0] += 1
-                self.location_grid[1] -= not self.stagger
-            if direction == 'dr':
-                self.location_grid[0] += 1
-                self.location_grid[1] += self.stagger
+    def get_direction_mapping(self):
+        mapping = {
+            'Upper Right': lambda: self.move((-1, 1 if self.stagger else 0)),
+            'Upper Left': lambda: self.move((-1, -1 if not self.stagger else 0)),
+            'Right': lambda: self.move((0, 1)),
+            'Left': lambda: self.move((0, -1)),
+            'Lower Right': lambda: self.move((1, 1 if self.stagger else 0)),
+            'Lower Left': lambda: self.move((1, -1 if not self.stagger else 0))
+            }
+        return mapping
 
+    def toggle_history_flag(self):
+        self.history_flag = not self.history_flag
+        
+    def toggle_fog_flag(self):
+        self.fog_flag = not self.fog_flag
+
+    def move(self, direction: tuple):
+            self.location_grid[0], self.location_grid[1] = map(sum, zip(self.location_grid, direction))
+
+    def command(self, command: str):
+        command_actions = {
+            'Undo': self.undo_movement,
+            'History': self.toggle_history_flag,
+            'Fog': self.toggle_fog_flag,
+            **self.get_direction_mapping()
+        }
+        
+        action = command_actions.get(command)
+        if action:
+            action()
             self.update()
-            self.logMovement()
-            print('Moving to', ', '.join([str(x) for x in self.gridLoc]))
-        else:
-            print('Wrong direction! Try l, ul, ur, r, dr, or dl.')
 
     def dump(self):
         temp_file = './assets/map/tmp.png'
