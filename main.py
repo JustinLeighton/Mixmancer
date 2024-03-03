@@ -19,7 +19,7 @@ import pygame
 
 from mixmancer.config.settings import Settings
 from mixmancer.gui.popup import ImagePopup, MusicPopup, SfxPopup
-from mixmancer.gui.theme import CustomTheme, CustomButton, CustomSlider, CustomLabel, CustomImage
+from mixmancer.gui.theme import CustomTheme, CustomButton, CustomSlider, CustomLabel, CustomImage, SquareButton
 from mixmancer.display.image import ImageProjector
 from mixmancer.display.hexmap import HexMap
 
@@ -30,71 +30,51 @@ class gui(tk.Tk):
         CustomTheme(self.settings.color)
         self.configure(background=self.settings.color['grey'])
         self.title('Mixmancer')
-        self.geometry('400x400')
+        self.geometry('500x500')
         pygame.mixer.init()
         pygame.init()
         self.projector = ImageProjector((self.settings.width, self.settings.height), self.settings.display)
         self.hexmap = HexMap('./assets/map/map.png', (self.settings.width, self.settings.height), 56, (-2, -6), (43, 131))
         self.hexmap_flag = False
 
-        # Define grid
-        self.left_frame = ttk.Frame(self)
-        self.left_frame.grid(row=0, column=0, sticky='nsew')
-        self.right_frame = ttk.Frame(self)
-        self.right_frame.grid(row=0, column=1, sticky='nsew')
+        # Generate widgets
+        widget_configs = [
+            {'name': 'image_selection_button', 'widget': CustomButton, 'text': 'Select Image', 'command': self.open_image_popup, 'x': 10, 'y': 10},
+            {'name': 'image_selection_label', 'widget': CustomImage, 'x': 150, 'y': 10},
+            {'name': 'music_selection_button', 'widget': CustomButton, 'text': 'Select Music', 'command': self.open_music_popup, 'x': 10, 'y': 50},
+            {'name': 'music_selection_label', 'widget': CustomLabel, 'text': 'Selected Music', 'x': 10, 'y': 90},
+            {'name': 'music_volume_slider', 'widget': CustomSlider, 'from_': 0, 'to': 1, 'orient': 'horizontal', 'command': self.update_volume, 'x': 10, 'y': 130},
+            {'name': 'sfx_selection_button', 'widget': CustomButton, 'text': 'Select Sfx', 'command': self.open_sfx_popup, 'x': 10, 'y': 170},
+            {'name': 'sfx_volume_slider', 'widget': CustomSlider, 'from_': 0, 'to': 1, 'orient': 'horizontal', 'command': self.set_sfx_volume, 'x': 10, 'y': 210},
+            {'name': 'sfx_stop_button', 'widget': CustomButton, 'text': 'Stop Sfx', 'command': self.stop_sfx_sounds, 'x': 10, 'y': 250},
+            {'name': 'hexploration_activation_button', 'widget': CustomButton, 'text': 'Hexploration', 'command': self.open_hexmap, 'x': 10, 'y': 290}
+        ]
 
-        # Image button
-        self.image_button = CustomButton(self.left_frame, text='Select Image', command=self.open_image_popup)
-        self.image_button.grid(row=0, column=0, padx=10, pady=5)
-        self.selected_image_label = CustomImage(self.right_frame)
-        self.selected_image_label.grid(row=0, column=1, padx=10, pady=5)
-
-        # Music button
-        self.music_button = CustomButton(self.left_frame, text='Select Music', command=self.open_music_popup)
-        self.music_button.grid(row=1, column=0, padx=10, pady=5)
-        self.selected_music_label = CustomLabel(self.left_frame, text='Selected Music:')
-        self.selected_music_label.grid(row=1, column=1, padx=10, pady=5)
-
-        # Music volume slider
-        self.music_volume_label = CustomLabel(self.left_frame, text='Music Volume:')
-        self.music_volume_label.grid(row=2, column=0, padx=10, pady=5)
-        self.music_volume_slider = CustomSlider(self.left_frame, from_=0, to=1, orient='horizontal', command=self.update_volume)
-        self.music_volume_slider.set(0.5)
-        self.music_volume_slider.grid(row=2, column=1, padx=10, pady=5)
-
-        # Sfx button
-        self.sfx_button = CustomButton(self.left_frame, text='Select Sfx', command=self.open_sfx_popup)
-        self.sfx_button.grid(row=4, column=0, padx=10, pady=5)
-
-        # Sfx volume slider
-        self.sfx_volume_label = CustomLabel(self.left_frame, text='Sfx Volume:')
-        self.sfx_volume_label.grid(row=5, column=0, padx=10, pady=5)
-        self.sfx_volume_slider = CustomSlider(self.left_frame, from_=0, to=1, orient='horizontal', command=self.set_sfx_volume)
-        self.sfx_volume_slider.set(0.5)
-        self.sfx_volume_slider.grid(row=5, column=1, padx=10, pady=5)
-
-        # Stop Sfx button
-        self.sfx_button = CustomButton(self.left_frame, text='Stop Sfx', command=self.stop_sfx_sounds)
-        self.sfx_button.grid(row=6, column=0, padx=10, pady=5)
-
-        # Hexmap button
-        self.hexmap_button = CustomButton(self.left_frame, text='Hexploration', command=self.open_hexmap)
-        self.hexmap_button.grid(row=7, column=0, padx=10, pady=5)
+        # Create widgets dynamically
+        self.widgets = {}  # Dictionary to store references to created widgets
+        for config in widget_configs:
+            widget_class = config.pop('widget')
+            name = config.pop('name')
+            kwargs = {key: value for key, value in config.items()}
+            widget = widget_class(self, **kwargs)
+            widget.place(x=config['x'], y=config['y'])
+            self.widgets[name] = widget  # Store reference to the widget
 
         # Hexmap movement buttons
-        button_info = {
-            'Upper Right': (8,0), 
-            'Upper Left': (9,0), 
-            'Right': (10,0), 
-            'Left': (11,0), 
-            'Lower Right': (12,0), 
-            'Lower Left': (13,0),
-            'Undo': (14,0),
-            'History': (15,0),
-            'Fog': (16,0)}
+        button_info = [
+            ('Upper Right', (10, 200)), 
+            ('Upper Left', (20, 200)), 
+            ('Right', (30, 200)), 
+            ('Left', (40, 200)), 
+            ('Lower Right', (50, 200)), 
+            ('Lower Left', (60, 200)),
+            ('Undo', (70, 200)),
+            ('History', (80, 200)),
+            ('Fog', (90, 200))
+        ]
         self.hexmap_buttons = []
-        for text, location in button_info.items():
-            button = CustomButton(self.left_frame, text=text, command=lambda btn=text: self.command_hexmap(btn))
+        for text, location in button_info:
+            button = SquareButton(self, image=f'assets/gui/{text}.png', color=self.settings.color, command=lambda btn=text: self.command_hexmap(btn))
             self.hexmap_buttons.append((button, location))
 
     def open_image_popup(self):
@@ -105,8 +85,8 @@ class gui(tk.Tk):
             image = Image.open(image_path)
             image.thumbnail((100, 100))
             photo_image = ImageTk.PhotoImage(image)
-            self.selected_image_label.config(image=photo_image)
-            self.selected_image_label.image = photo_image  # Keep reference to the image to avoid garbage collection
+            self.widgets['image_selection_label'].config(image=photo_image)
+            self.widgets['image_selection_label'].image = photo_image  # Keep reference to the image to avoid garbage collection
 
         image_popup = ImagePopup(self, callback=update_selected_image)
         image_popup.grab_set()
@@ -116,7 +96,7 @@ class gui(tk.Tk):
 
     def open_music_popup(self):
         def update_selected_music(selected_music):
-            self.selected_music_label.config(text=selected_music)
+            self.widgets['music_selection_label'].config(text=selected_music)
         music_popup = MusicPopup(self, callback=update_selected_music)
         music_popup.grab_set()
     
@@ -150,24 +130,22 @@ class gui(tk.Tk):
         image = Image.open(image_path)
         image.thumbnail((100, 100))
         photo_image = ImageTk.PhotoImage(image)
-        self.selected_image_label.config(image=photo_image)
-        self.selected_image_label.image = photo_image
+        self.widgets['image_selection_label'].config(image=photo_image)
+        self.widgets['image_selection_label'] = photo_image
 
     def toggle_hexmap_controls(self):
         if self.hexmap_flag:
             self.hexmap_flag = False
             for button, _ in self.hexmap_buttons:
-                button.grid_remove()
+                button.place_forget()
         else:
             self.hexmap_flag = True
             for button, location in self.hexmap_buttons:
-                print(location)
-                button.grid(row=location[0], column=location[1], padx=10, pady=5)
+                button.place(x=location[0], y=location[1])
     
     def command_hexmap(self, direction: str):
         self.hexmap.command(direction)
         self.display_hexmap()
-        print(direction)
     
         
 def main():
