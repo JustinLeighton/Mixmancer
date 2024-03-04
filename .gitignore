@@ -7,3 +7,8 @@
 *.txt
 __pycache__
 .venv
+.pylintrc
+.coverage
+.coverage.*
+.vscode
+.pytest_cache

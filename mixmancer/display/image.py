@@ -1,25 +1,52 @@
-# -*- coding: utf-8 -*-
 """
-Created on Tue Aug  8 22:13:09 2023
-
-@author: Justin Leighton
+This module provides a class for image projection using Pygame.
 """
 
 import pygame
 
 class ImageProjector():
+    """
+    A class to manage images projected to second display
+    
+    Attributes:
+        resolution (tuple): A tuple representing the resolution of the display.
+        display (int): An integer representing the display number.
+        screen (pygame.Surface): A Pygame Surface object representing the screen.
+        status (bool): A boolean indicating the status of the projector.
+        image (pygame.Surface): A Pygame Surface object representing the loaded image.
+    """
+
     def __init__(self, resolution: tuple, display: int):
+        """
+        Initializes the ImageProjector object with the given resolution and display.
+
+        Args:
+            resolution (tuple): A tuple representing the resolution of the display.
+            display (int): An integer representing the display number.
+        """
         self.resolution = resolution
-        self.screen = pygame.display.set_mode(self.resolution, flags=pygame.NOFRAME, display=display)
+        self.screen = pygame.display.set_mode(resolution, flags=pygame.NOFRAME, display=display)
         self.status = False
-        self.resolution = self.resolution
+        self.image = None
 
     def load_image(self, image: str) -> bool:
+        """
+        Loads an image onto the projector.
+
+        Args:
+            image (str): The file path of the image to be loaded.
+
+        Returns:
+            bool: True if the image is loaded successfully, False otherwise.
+        """
         self.image = pygame.image.load(image)
         self.blit()
         return True
-    
+
     def blit(self,):
+        """
+        Blits the loaded image onto the screen.
+        """
         self.screen.fill((0, 0, 0))
         sw, sh = self.resolution
         iw, ih = self.image.get_width(), self.image.get_height()
@@ -30,4 +57,3 @@ class ImageProjector():
         self.image = pygame.transform.scale(self.image, (t * iw, t * ih))
         self.screen.blit(self.image, ((sw - t * iw) / 2, (sh - t * ih) / 2))
         pygame.display.update()
-
