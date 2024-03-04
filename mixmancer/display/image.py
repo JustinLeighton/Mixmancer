@@ -1,7 +1,3 @@
-"""
-This module provides a class for managing the image displayed on the second display using Pygame.
-"""
-
 import pygame
 
 
