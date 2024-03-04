@@ -20,6 +20,7 @@ import pygame
 from mixmancer.config.settings import Settings
 from mixmancer.gui.popup import ImagePopup, MusicPopup, SfxPopup
 from mixmancer.gui.theme import CustomTheme, CustomButton, CustomSlider, CustomLabel, CustomImage, SquareButton
+from mixmancer.gui.commands import stop_sfx_sounds, set_music_volume
 from mixmancer.display.image import ImageProjector
 from mixmancer.display.hexmap import HexMap
 
@@ -43,10 +44,10 @@ class gui(tk.Tk):
             {'name': 'image_selection_label', 'widget': CustomImage, 'x': 150, 'y': 10},
             {'name': 'music_selection_button', 'widget': CustomButton, 'text': 'Select Music', 'command': self.open_music_popup, 'x': 10, 'y': 50},
             {'name': 'music_selection_label', 'widget': CustomLabel, 'text': 'Selected Music', 'x': 10, 'y': 90},
-            {'name': 'music_volume_slider', 'widget': CustomSlider, 'from_': 0, 'to': 1, 'orient': 'horizontal', 'command': self.update_volume, 'x': 10, 'y': 130},
+            {'name': 'music_volume_slider', 'widget': CustomSlider, 'from_': 0, 'to': 1, 'orient': 'horizontal', 'command': set_music_volume, 'x': 10, 'y': 130},
             {'name': 'sfx_selection_button', 'widget': CustomButton, 'text': 'Select Sfx', 'command': self.open_sfx_popup, 'x': 10, 'y': 170},
             {'name': 'sfx_volume_slider', 'widget': CustomSlider, 'from_': 0, 'to': 1, 'orient': 'horizontal', 'command': self.set_sfx_volume, 'x': 10, 'y': 210},
-            {'name': 'sfx_stop_button', 'widget': CustomButton, 'text': 'Stop Sfx', 'command': self.stop_sfx_sounds, 'x': 10, 'y': 250},
+            {'name': 'sfx_stop_button', 'widget': CustomButton, 'text': 'Stop Sfx', 'command': stop_sfx_sounds, 'x': 10, 'y': 250},
             {'name': 'hexploration_activation_button', 'widget': CustomButton, 'text': 'Hexploration', 'command': self.open_hexmap, 'x': 10, 'y': 290}
         ]
 
@@ -74,23 +75,21 @@ class gui(tk.Tk):
         ]
         self.hexmap_buttons = []
         for text, location in button_info:
-            button = SquareButton(self, image=f'assets/gui/{text}.png', color=self.settings.color, command=lambda btn=text: self.command_hexmap(btn))
+            button = SquareButton(self, image=f'assets/app/{text}.png', color=self.settings.color, command=lambda btn=text: self.command_hexmap(btn))
             self.hexmap_buttons.append((button, location))
 
+    def update_selected_image(self, selected_image):
+        image_path = os.path.join('assets/img', selected_image)
+        self.projector.load_image(image_path)
+        image = Image.open(image_path)
+        image.thumbnail((100, 100))
+        photo_image = ImageTk.PhotoImage(image)
+        self.widgets['image_selection_label'].config(image=photo_image)
+        self.widgets['image_selection_label'].image = photo_image
+
     def open_image_popup(self):
-        def update_selected_image(selected_image):
-            image_path = os.path.join('assets/img', selected_image)
-            self.projector.load_image(image_path)
-            
-            image = Image.open(image_path)
-            image.thumbnail((100, 100))
-            photo_image = ImageTk.PhotoImage(image)
-            self.widgets['image_selection_label'].config(image=photo_image)
-            self.widgets['image_selection_label'].image = photo_image  # Keep reference to the image to avoid garbage collection
-
-        image_popup = ImagePopup(self, callback=update_selected_image)
+        image_popup = ImagePopup(self, callback=self.update_selected_image)
         image_popup.grab_set()
-
         if self.hexmap_flag:
             self.toggle_hexmap_controls()
 
@@ -99,25 +98,10 @@ class gui(tk.Tk):
             self.widgets['music_selection_label'].config(text=selected_music)
         music_popup = MusicPopup(self, callback=update_selected_music)
         music_popup.grab_set()
-    
-    def update_current_music(self, music):
-        self.current_music.set(music)
-
-    def update_volume(self, volume):
-        self.set_music_volume(float(volume))
-
-    def set_music_volume(self, volume):
-        pygame.mixer.music.set_volume(volume) 
 
     def open_sfx_popup(self):
         sfx_popup = SfxPopup(self, self.sfx_volume)
         sfx_popup.grab_set()
-
-    def set_sfx_volume(self, volume):
-        self.sfx_volume = float(volume)
-
-    def stop_sfx_sounds(self):
-        pygame.mixer.stop()
 
     def open_hexmap(self):
         if not self.hexmap_flag:
@@ -131,7 +115,7 @@ class gui(tk.Tk):
         image.thumbnail((100, 100))
         photo_image = ImageTk.PhotoImage(image)
         self.widgets['image_selection_label'].config(image=photo_image)
-        self.widgets['image_selection_label'] = photo_image
+        self.widgets['image_selection_label'].image = photo_image
 
     def toggle_hexmap_controls(self):
         if self.hexmap_flag:
