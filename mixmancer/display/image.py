@@ -43,9 +43,9 @@ class ImageProjector():
         self.blit()
         return True
 
-    def blit(self,):
+    def blit(self):
         """
-        Blits the loaded image onto the screen.
+        Blits the loaded image onto the screen. Auto-sizes image depending on screen resolution.
         """
         self.screen.fill((0, 0, 0))
         sw, sh = self.resolution
