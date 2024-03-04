@@ -1,5 +1,5 @@
 """
-This module provides a class for image projection using Pygame.
+This module provides a class for managing the image displayed on the second display using Pygame.
 """
 
 import pygame
@@ -26,9 +26,7 @@ class ImageProjector:
             display (int): An integer representing the display number.
         """
         self.resolution = resolution
-        self.screen = pygame.display.set_mode(
-            resolution, flags=pygame.NOFRAME, display=display
-        )
+        self.screen = pygame.display.set_mode(resolution, flags=pygame.NOFRAME, display=display)
         self.status = False
         self.image: pygame.Surface
 

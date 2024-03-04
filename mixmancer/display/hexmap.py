@@ -100,7 +100,7 @@ class HexMap:
                     print(f"Error converting line '{line.strip()}' to int: {e}")
         return data
 
-    def undo_movement(self) -> None:
+    def undo_movement(self):
         data = self.read_history()
         data = data[:-1]
         self.location_grid = data[len(data) - 1]
@@ -108,7 +108,7 @@ class HexMap:
             f.writelines(",".join(map(str, x)) + "\n" for x in data)
         self.update()
 
-    def log_movement(self) -> None:
+    def log_movement(self):
         with open("./assets/map/history.txt", "a") as f:
             f.write(f"{','.join([str(x) for x in self.location_grid])}\n")
 
@@ -129,7 +129,7 @@ class HexMap:
     def toggle_fog_flag(self):
         self.fog_flag = not self.fog_flag
 
-    def move(self, direction: tuple[int, int]) -> None:
+    def move(self, direction: tuple[int, int]):
         x, y = map(sum, zip(self.location_grid, direction))
         self.location_grid = (x, y)
 
