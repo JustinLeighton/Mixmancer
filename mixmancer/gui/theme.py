@@ -66,9 +66,11 @@ class CustomSlider(WidgetWithPlacement, ttk.Scale):
             self.set(0.5)
 
 class CustomImage(WidgetWithPlacement, ttk.Label):
-    def __init__(self, master=None, image=None, **kw):
+    def __init__(self, master=None, image=None, x=0, y=0, **kw):
         super().__init__(master, **kw)
         self.image = image
+        self.x = x
+        self.y = y
         self.configure_image()
 
     def configure_image(self):

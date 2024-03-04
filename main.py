@@ -12,7 +12,6 @@ Created on Thu May 18 23:31:42 2023
 # from mixmancer.config.settings import load_settings, print_menu
 
 import tkinter as tk
-from tkinter import ttk
 from PIL import Image, ImageTk
 import os
 import pygame
@@ -24,19 +23,21 @@ from mixmancer.gui.commands import stop_sfx_sounds, set_music_volume
 from mixmancer.display.image import ImageProjector
 from mixmancer.display.hexmap import HexMap
 
-class gui(tk.Tk):
+class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.settings = Settings()
+
         CustomTheme(self.settings.color)
         self.configure(background=self.settings.color['grey'])
         self.title('Mixmancer')
-        self.geometry('500x500')
+        self.geometry(f'{self.settings.app_width}x{self.settings.app_height}')
         pygame.mixer.init()
         pygame.init()
-        self.projector = ImageProjector((self.settings.width, self.settings.height), self.settings.display)
-        self.hexmap = HexMap('./assets/map/map.png', (self.settings.width, self.settings.height), 56, (-2, -6), (43, 131))
+        self.projector = ImageProjector((self.settings.projector_width, self.settings.projector_height), self.settings.display)
+        self.hexmap = HexMap('./assets/map/map.png', (self.settings.projector_width, self.settings.projector_height), 56, (-2, -6), (43, 131))
         self.hexmap_flag = False
+        self.image_path = None
 
         # Generate widgets
         widget_configs = [
@@ -52,7 +53,7 @@ class gui(tk.Tk):
         ]
 
         # Create widgets dynamically
-        self.widgets = {}  # Dictionary to store references to created widgets
+        self.widgets = {}
         for config in widget_configs:
             widget_class = config.pop('widget')
             name = config.pop('name')
@@ -61,31 +62,25 @@ class gui(tk.Tk):
             widget.place(x=config['x'], y=config['y'])
             self.widgets[name] = widget  # Store reference to the widget
 
+        # Resize the image every time the window size changes
+        self.bind("<Configure>", self.resize_preview_image)
+
         # Hexmap movement buttons
         button_info = [
-            ('Upper Right', (10, 200)), 
-            ('Upper Left', (20, 200)), 
-            ('Right', (30, 200)), 
-            ('Left', (40, 200)), 
-            ('Lower Right', (50, 200)), 
-            ('Lower Left', (60, 200)),
-            ('Undo', (70, 200)),
-            ('History', (80, 200)),
-            ('Fog', (90, 200))
+            ('Upper Left', (40, 330)), 
+            ('Upper Right', (70, 330)), 
+            ('Left', (20, 360)), 
+            ('Right', (90, 360)), 
+            ('Lower Left', (40, 390)), 
+            ('Lower Right', (70, 390)),
+            ('Undo', (20, 420)),
+            ('History', (60, 420)),
+            ('Fog', (100, 420))
         ]
         self.hexmap_buttons = []
         for text, location in button_info:
             button = SquareButton(self, image=f'assets/app/{text}.png', color=self.settings.color, command=lambda btn=text: self.command_hexmap(btn))
             self.hexmap_buttons.append((button, location))
-
-    def update_selected_image(self, selected_image):
-        image_path = os.path.join('assets/img', selected_image)
-        self.projector.load_image(image_path)
-        image = Image.open(image_path)
-        image.thumbnail((100, 100))
-        photo_image = ImageTk.PhotoImage(image)
-        self.widgets['image_selection_label'].config(image=photo_image)
-        self.widgets['image_selection_label'].image = photo_image
 
     def open_image_popup(self):
         image_popup = ImagePopup(self, callback=self.update_selected_image)
@@ -108,14 +103,48 @@ class gui(tk.Tk):
             self.display_hexmap()
             self.toggle_hexmap_controls()
 
+    def set_sfx_volume(self, volume):
+        self.sfx_volume = float(volume)
+
+    def update_selected_image(self, selected_image):
+        image_path = os.path.join('assets/img', selected_image)
+        self.set_image_path(image_path)
+        self.update_projector_image()
+        self.update_preview_image()
+
     def display_hexmap(self):
         image_path = self.hexmap.dump()
-        self.projector.load_image(image_path)
-        image = Image.open(image_path)
-        image.thumbnail((100, 100))
-        photo_image = ImageTk.PhotoImage(image)
-        self.widgets['image_selection_label'].config(image=photo_image)
-        self.widgets['image_selection_label'].image = photo_image
+        self.set_image_path(image_path)
+        self.update_projector_image()
+        self.update_preview_image()
+
+    def update_projector_image(self):
+        image_path = self.get_image_path()
+        if image_path:
+            self.projector.load_image(image_path)
+
+    def update_preview_image(self):
+        image_path = self.get_image_path()
+        if image_path:
+            image = Image.open(image_path)
+            image_size = self.get_preview_image_size()
+            image.thumbnail(image_size)
+            photo_image = ImageTk.PhotoImage(image)
+            self.widgets['image_selection_label'].config(image=photo_image)
+            self.widgets['image_selection_label'].image = photo_image
+    
+    def set_image_path(self, image_path):
+        self.image_path = image_path
+    
+    def get_image_path(self) -> str:
+        return self.image_path
+
+    def get_preview_image_size(self, padding = 10) -> tuple:
+        image_width = self.settings.app_width - self.widgets['image_selection_label'].x - padding
+        image_height = self.settings.app_height - self.widgets['image_selection_label'].y - padding
+        if image_width < 100 or image_height < 100:
+            image_width, image_height = 100, 100
+        return image_width, image_height
 
     def toggle_hexmap_controls(self):
         if self.hexmap_flag:
@@ -131,9 +160,14 @@ class gui(tk.Tk):
         self.hexmap.command(direction)
         self.display_hexmap()
     
+    def resize_preview_image(self, event):
+        if event.widget == self:
+            if self.settings.app_height != event.height or self.settings.app_width != event.width:
+                self.settings.app_height, self.settings.app_width = event.height, event.width
+                self.update_preview_image()
         
 def main():
-    app = gui()
+    app = App()
     app.mainloop()
 
 if __name__=='__main__':
