@@ -4,10 +4,11 @@ This module provides a class for image projection using Pygame.
 
 import pygame
 
-class ImageProjector():
+
+class ImageProjector:
     """
     A class to manage images projected to second display
-    
+
     Attributes:
         resolution (tuple): A tuple representing the resolution of the display.
         display (int): An integer representing the display number.
@@ -16,7 +17,7 @@ class ImageProjector():
         image (pygame.Surface): A Pygame Surface object representing the loaded image.
     """
 
-    def __init__(self, resolution: tuple, display: int):
+    def __init__(self, resolution: tuple[int, int], display: int):
         """
         Initializes the ImageProjector object with the given resolution and display.
 
@@ -25,9 +26,11 @@ class ImageProjector():
             display (int): An integer representing the display number.
         """
         self.resolution = resolution
-        self.screen = pygame.display.set_mode(resolution, flags=pygame.NOFRAME, display=display)
+        self.screen = pygame.display.set_mode(
+            resolution, flags=pygame.NOFRAME, display=display
+        )
         self.status = False
-        self.image = None
+        self.image: pygame.Surface
 
     def load_image(self, image: str) -> bool:
         """
