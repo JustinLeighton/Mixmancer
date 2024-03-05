@@ -1,12 +1,47 @@
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
-from typing import Any, Callable, Optional
+from typing import Any, Optional, Callable
+
+
+def calculate_resized_dimensions(image_dimensions: tuple[int, int], target_location: tuple[int, int]):
+    """Calculate the resized dimensions of an image while maintaining aspect ratio,
+    maximizing the space within the target location.
+
+    Args:
+    - image_dimensions (tuple): Dimensions of the original image (width, height).
+    - target_location (tuple): Planned location of the image (x, y) within its container.
+
+    Returns:
+    - tuple: Resized dimensions (width, height).
+    """
+    # Unpack image dimensions
+    image_width: int
+    image_height: int
+    available_width: int
+    available_height: int
+    image_width, image_height = image_dimensions
+    available_width, available_height = target_location
+
+    # Calculate aspect ratio of the original image
+    try:
+        aspect_ratio = image_width / image_height
+    except ZeroDivisionError as e:
+        raise ZeroDivisionError("Cannot calculate aspect ratio: Image height cannot be zero") from e
+
+    # Calculate new dimensions while maintaining aspect ratio
+    if available_width / aspect_ratio <= available_height:
+        new_width = available_width
+        new_height = int(new_width / aspect_ratio)
+    else:
+        new_height = available_height
+        new_width = int(new_height * aspect_ratio)
+
+    return new_width, new_height
 
 
 class CustomTheme:
-    """
-    Custom theme for tkinter app and widgets
+    """Custom theme for tkinter app and widgets
 
     Args:
         color (dict[str, str]): dictionary of color and hex value
@@ -52,9 +87,7 @@ class CustomTheme:
 
 
 class WidgetWithPlacement:
-    """
-    Widget parent class that allows for x and y pixel coordinates to be defined at class creation
-    """
+    """Widget parent class that allows for x and y pixel coordinates to be defined at class creation"""
 
     def __init__(self, master: tk.Tk, **kwargs: Any):
         self.x: int = kwargs.pop("x", 0)
@@ -62,30 +95,21 @@ class WidgetWithPlacement:
         super().__init__(master, **kwargs)  # type: ignore[reportCallIssue]
 
     def place(self, **kwargs: Any):
-        """
-        Places the widget at the specified x, y coordinates.
-        """
+        """Places the widget at the specified x, y coordinates."""
         kwargs.update({"x": self.x, "y": self.y})
         super().place(**kwargs)  # type: ignore[unknownMemberType,E1101]
 
 
 class CustomButton(WidgetWithPlacement, ttk.Button):
-    """
-    Custom ttk.Button widget to allow for the place method to be called at class creation
-    """
+    """Custom ttk.Button widget with style theme"""
 
-    def __init__(self, master: tk.Tk, image_path: str = "", **kwargs: dict[str, Any]):
+    def __init__(self, master: tk.Tk, **kwargs: Any):
         super().__init__(master, **kwargs)
-        if image_path:
-            self.image = tk.PhotoImage(file=image_path)
-            self.configure(image=self.image, compound="left")
         self.configure(style="Custom.TButton")
 
 
 class CustomLabel(WidgetWithPlacement, ttk.Label):
-    """
-    Custom ttk.Label widget to allow for the place method to be called at class creation
-    """
+    """Custom ttk.Label widget with style theme"""
 
     def __init__(self, master: tk.Tk, **kw: dict[str, Any]):
         super().__init__(master, **kw)
@@ -93,9 +117,7 @@ class CustomLabel(WidgetWithPlacement, ttk.Label):
 
 
 class CustomSlider(WidgetWithPlacement, ttk.Scale):
-    """
-    Custom ttk.Scale widget to allow for the place method to be called at class creation
-    """
+    """Custom ttk.Scale widget with style theme"""
 
     def __init__(self, master: tk.Tk, initial_value: float = 0.5, **kw: dict[str, Any]):
         super().__init__(master, **kw)
@@ -104,40 +126,57 @@ class CustomSlider(WidgetWithPlacement, ttk.Scale):
 
 
 class CustomImage(WidgetWithPlacement, ttk.Label):
-    """
-    Custom ttk.Label widget to allow for the place method to be called at class creation and image auto resizing
-    """
+    """Custom ttk.Label widget to allow for the place method to be called at class creation and image auto resizing"""
 
     def __init__(self, master: tk.Tk, image_path: str = "", x: int = 0, y: int = 0, **kw: dict[str, Any]):
         super().__init__(master, **kw)
-        self.image = image_path
-        self.x = x
-        self.y = y
+        self.image_path = image_path
+        self.image_object: Image.Image
+        self.image_photo: ImageTk.PhotoImage
+        self.image_size: tuple[int, int] = (100, 100)
+        self.image_dimension: tuple[int, int]
+        self.x: int = x
+        self.y: int = y
         self.configure_image()
 
-    def configure_image(self):
+    def configure_image(self, image_path: str = "", image_target_size: tuple[int, int] = (100, 100)):
         """Configure image if exists"""
-        if self.image:
-            self.display_image()
+        self.set_image_path(image_path)
+        if self.image_path:
+            self.load_image(self.image_path)
+            self.resize_image(image_target_size)
         else:
             self.configure(text="N/A", font=("Helvetica", 12))
 
+    def load_image(self, image_path: str):
+        """Load PIL.Image.Image object from self.image_path"""
+        if image_path:
+            self.image_object = Image.open(image_path)
+            self.image_dimension = self.image_object.size
+
     def display_image(self):
         """Display image on label widget, and auto resize to window"""
-        resized_image: ImageTk.Image = self.image.resize((self.winfo_width(), self.winfo_height()), Image.ANTIALIAS)  # type: ignore[unknownMemberType,E1101]
-        self.photo_image = ImageTk.PhotoImage(resized_image)  # type: ignore[reportUnknownArgumentType]
-        self.configure(image=self.photo_image)
+        resized_image: ImageTk.Image = self.image_object.resize(self.image_size, Image.Resampling.LANCZOS)  # type: ignore[unknownMemberType,E1101]
+        self.image_photo = ImageTk.PhotoImage(resized_image)  # type: ignore[reportUnknownArgumentType]
+        self.configure(image=self.image_photo)
 
-    def resize_image(self):
+    def resize_image(self, image_target_size: tuple[int, int]):
         """If an image is being displayed, call display_image to resize"""
-        if self.image:
+        if self.image_path:
+            self.image_size = calculate_resized_dimensions(self.image_dimension, image_target_size)
             self.display_image()
+
+    def set_image_path(self, image_path: str):
+        """Set image_path attribute
+
+        Args:
+            image_path (str): Path to image file
+        """
+        self.image_path = image_path
 
 
 class SquareButton(tk.Button):
-    """
-    Custom tk.button widget for hexploration commands. Assigns callback function during object creation.
-    """
+    """Custom tk.button widget for hexploration commands. Assigns callback function during object creation."""
 
     def __init__(
         self,
@@ -145,7 +184,7 @@ class SquareButton(tk.Button):
         image: str = "",
         command: Optional[Callable[..., Any]] = None,
         color: Optional[dict[str, Any]] = None,
-        **kwargs: dict[str, Any]
+        **kwargs: Any
     ):
         super().__init__(master, **kwargs)  # type: ignore[reportArgumentType]
         self.image = image
