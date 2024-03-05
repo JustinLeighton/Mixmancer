@@ -26,19 +26,19 @@ class ImageProjector:
         self.status = False
         self.image: pygame.Surface
 
-    def load_image(self, image: str) -> bool:
+    def load_image(self, image: str):
         """
         Loads an image onto the projector.
 
         Args:
             image (str): The file path of the image to be loaded.
-
-        Returns:
-            bool: True if the image is loaded successfully, False otherwise.
         """
-        self.image = pygame.image.load(image)
-        self.blit()
-        return True
+        try:
+            self.image = pygame.image.load(image)
+            self.blit()
+            return True
+        except:
+            return False
 
     def blit(self):
         """

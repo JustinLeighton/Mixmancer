@@ -18,6 +18,7 @@ class HexMap:
         history_flag (bool): Flag indicating whether history is being shown.
         yellow (tuple[int, int, int]): RGB tuple representing the color yellow.
         stagger (bool): Flag indicating whether staggered hex layout is used.
+        history_file (str): path to text log of past player movement
     """
 
     def __init__(
@@ -50,6 +51,7 @@ class HexMap:
         self.history_flag = False
         self.yellow = (255, 215, 0)
         self.stagger: bool
+        self.history_file: str = "./assets/map/history.txt"
 
     def update(self):
         """Update the HexMap object by updating the pixel location and stagger bool in order to accurately center the player location on the image."""
@@ -73,6 +75,11 @@ class HexMap:
         x = -self.location_pixel[0] + self.resolution[0] / 2
         y = -self.location_pixel[1] + self.resolution[1] / 2
         return (y, x)
+
+    def reset_history(self):
+        """Reset player movement text log file"""
+        with open(self.history_file, "w") as file:
+            file.truncate(0)
 
     def grid_to_pixel(self, grid_location: tuple[int, int]) -> tuple[float, float]:
         """
@@ -148,20 +155,20 @@ class HexMap:
             list[tuple[float, float]]: List of historical pixel coordinates.
         """
         output: list[tuple[float, float]] = []
-        for grid_coordinate in self.read_history():
+        for grid_coordinate in self.read_history(self.history_file):
             pixel_coordinate = self.grid_to_pixel(grid_coordinate)
             if self.check_on_screen(pixel_coordinate):
                 output.append(pixel_coordinate)
         return output
 
-    def read_history(self) -> list[tuple[int, int]]:
+    def read_history(self, file_location: str) -> list[tuple[int, int]]:
         """
         Read historical grid coordinates from file.
 
         Returns:
             list[tuple[int, int]]: List of historical grid coordinates.
         """
-        with open("./assets/map/history.txt", "r") as file:
+        with open(file_location, "r") as file:
             data: list[tuple[int, int]] = []
             for line in file:
                 try:
@@ -173,16 +180,16 @@ class HexMap:
 
     def undo_movement(self):
         """Undo the last movement."""
-        data = self.read_history()
+        data = self.read_history(self.history_file)
         data = data[:-1]
         self.location_grid = data[len(data) - 1]
-        with open("map/history.txt", "w") as f:
+        with open(self.history_file, "w") as f:
             f.writelines(",".join(map(str, x)) + "\n" for x in data)
         self.update()
 
     def log_movement(self):
         """Log the last movement in the history file."""
-        with open("./assets/map/history.txt", "a") as f:
+        with open(self.history_file, "a") as f:
             f.write(f"{','.join([str(x) for x in self.location_grid])}\n")
 
     def get_direction_mapping(self):
