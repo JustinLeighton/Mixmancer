@@ -54,7 +54,7 @@ class HexMap:
         self.history_file: str = "./assets/map/history.txt"
 
     def update(self):
-        """Update the HexMap object by updating the pixel location and stagger bool in order to accurately center the player location on the image."""
+        """Update pixel location and stagger bool according to the player location on the map."""
         self.stagger = self.check_stagger(self.location_grid)
         self.location_pixel = self.grid_to_pixel(self.location_grid)
 
@@ -149,7 +149,7 @@ class HexMap:
 
     def get_history(self) -> list[tuple[float, float]]:
         """
-        Get a list of historical grid coordinates.
+        Get a list of historical grid points and convert to pixel coordinates.
 
         Returns:
             list[tuple[float, float]]: List of historical pixel coordinates.
@@ -175,7 +175,7 @@ class HexMap:
                     y, x = map(int, line.strip().split(","))
                     data.append((y, x))
                 except ValueError as e:
-                    print(f"Error converting line '{line.strip()}' to int: {e}")
+                    raise ValueError(f"Error converting line '{line.strip()}' to int: {e}")
         return data
 
     def undo_movement(self):

@@ -86,8 +86,28 @@ def test_read_history(hex_map: HexMap):
     hex_map.reset_history()
     with open(history_file, "w") as file:
         file.write("0,0\n1,1\n2,2\n")
-    hex_map.read_history(history_file)
     assert hex_map.read_history(history_file) == [(0, 0), (1, 1), (2, 2)]
+
+
+def test_read_history_value_error(hex_map: HexMap):
+    history_file = "assets/tests/history.txt"
+    hex_map.history_file = history_file
+    hex_map.reset_history()
+    with open(history_file, "w") as file:
+        file.write("This_Breaks_Stuff")
+    with pytest.raises(ValueError):
+        hex_map.read_history(history_file)
+
+
+def test_get_history(hex_map: HexMap):
+    history_file = "assets/tests/history.txt"
+    hex_map.history_file = history_file
+    hex_map.reset_history()
+    with open(history_file, "w") as file:
+        file.write("0,0\n1,1\n2,2\n")
+    pixel_location_history = hex_map.get_history()
+    assert pixel_location_history[0][0] == 2.0
+    assert pixel_location_history[0][1] == 1.0
 
 
 def test_log_movement(hex_map: HexMap):
@@ -130,6 +150,16 @@ def test_move(hex_map: HexMap):
     initial_location = hex_map.location_grid
     hex_map.move((-1, 1))
     assert hex_map.location_grid == (initial_location[0] - 1, initial_location[1] + 1)
+
+
+def test_undo_movement(hex_map: HexMap):
+    history_file = "assets/tests/history.txt"
+    hex_map.history_file = history_file
+    hex_map.reset_history()
+    with open(history_file, "w") as file:
+        file.write("0,0\n1,1\n2,2\n")
+    hex_map.undo_movement()
+    assert hex_map.read_history(history_file) == [(0, 0), (1, 1)]
 
 
 def test_command(hex_map: HexMap):
