@@ -15,14 +15,6 @@ class BasePopup(tk.Toplevel):
         super().__init__(master)
         self.configure(background=Settings().color["grey"])
 
-    def on_mouse_wheel(self, event: Any):
-        """Event for mouse scroll wheel activation
-
-        Args:
-            event (tk.EventType.MouseWheel): tk.event
-        """
-        self.yview_scroll(-1 * (event.delta // 120), "units")  # type: ignore
-
     def _open_popup(self):
         self.update_idletasks()  # Ensure the window is updated before getting its size
         popup_width = self.winfo_width()
@@ -41,11 +33,8 @@ class BasePopup(tk.Toplevel):
         y = min(mouse_y, screen_height - self.winfo_height())
         return x, y
 
-    def make_scrollable(self, widget: tk.Widget) -> ttk.Frame:
+    def make_scrollable(self) -> ttk.Frame:
         """Allows for scrolling
-
-        Args:
-            widget (tk.Widget): The widget to make scrollable.
 
         Returns:
             ttk.Frame: The scrollable frame.
@@ -75,6 +64,7 @@ class ImagePopup(BasePopup):
 
     Args:
         master (tk.Tk): Toplevel widget
+        path (str): Directory with jpg files to display for selection
         callback (callable): function callback for selection
         width (int, optional): pixel width of window. Defaults to 500.
         height (int, optional): pixel height of window. Defaults to 300.
@@ -83,27 +73,23 @@ class ImagePopup(BasePopup):
         OSError: Error loading image
     """
 
-    def __init__(self, master: tk.Tk, callback: Callable[[Any], Any], width: int = 500, height: int = 300):
+    def __init__(self, master: tk.Tk, path: str, callback: Callable[[Any], Any], width: int = 500, height: int = 300):
         super().__init__(master)
         self.title("Select Image")
         self.callback = callback
         self.geometry(f"{width}x{height}")
 
         # Load images
-        image_dir = "assets/jpg"
         self.images: list[tuple[str, ImageTk.PhotoImage]] = []
-        for filename in os.listdir(image_dir):
+        for filename in os.listdir(path):
             if filename.endswith(".jpg"):
-                try:
-                    image_path = os.path.join(image_dir, filename)
-                    image = Image.open(image_path)
-                    image.thumbnail((100, 100))  # Resize image to fit button
-                    self.images.append((filename, ImageTk.PhotoImage(image)))
-                except (OSError, IOError) as e:
-                    raise OSError(f'Error loading image "{filename}": {e}') from e
+                image_path = os.path.join(path, filename)
+                image = Image.open(image_path)
+                image.thumbnail((100, 100))  # Resize image to fit button
+                self.images.append((filename, ImageTk.PhotoImage(image)))
 
         # Create buttons for each image
-        scrollable_frame = self.make_scrollable(self)  # type: ignore[reportArgumentType]
+        scrollable_frame = self.make_scrollable()  # type: ignore[reportArgumentType]
         for i, (filename, image) in enumerate(self.images):
             button = ttk.Button(scrollable_frame, image=image, command=lambda idx=i: self.select_image(idx))
             button.grid(row=i // 4, column=i % 4, padx=5, pady=5)

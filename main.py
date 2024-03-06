@@ -151,7 +151,7 @@ class App(tk.Tk):
             self.hexmap_buttons.append((button, location))
 
     def open_image_popup(self):
-        image_popup = ImagePopup(self, callback=self.update_selected_image)
+        image_popup = ImagePopup(self, path="assets/jpg", callback=self.update_selected_image)
         image_popup.grab_set()
         if self.hexmap_flag:
             self.toggle_hexmap_controls()

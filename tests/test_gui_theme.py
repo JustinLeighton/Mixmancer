@@ -21,6 +21,7 @@ def custom_theme():
 
 # Create the root window outside of any function or fixture
 _root = tk.Tk()
+_root.attributes("-topmost", False)  # type: ignore
 _root.geometry("200x200")
 _root.update_idletasks()
 
