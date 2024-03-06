@@ -176,7 +176,7 @@ class App(tk.Tk):
         self.sfx_volume = float(volume)
 
     def update_selected_image(self, selected_image):
-        image_path = os.path.join("assets/img", selected_image)
+        image_path = os.path.join("assets/jpg", selected_image)
         self.set_image_path(image_path)
         self.update_projector_image()
         self.update_preview_image()
