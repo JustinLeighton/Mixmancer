@@ -1,9 +1,9 @@
 import pygame
+from PIL import Image
 
 
 class ImageProjector:
-    """
-    A class to manage images projected to second display
+    """A class to manage images projected to second display
 
     Attributes:
         resolution (tuple): A tuple representing the resolution of the display.
@@ -24,26 +24,49 @@ class ImageProjector:
         self.resolution = resolution
         self.screen = pygame.display.set_mode(resolution, flags=pygame.NOFRAME, display=display)
         self.status = False
-        self.image: pygame.Surface
+        self.image: pygame.Surface = None  # type: ignore[reportAttributeAccessIssue]
 
-    def load_image(self, image: str):
-        """
-        Loads an image onto the projector.
+    def load_image_file(self, image_file: str) -> bool:
+        """Loads an image from file into the projector.
 
         Args:
-            image (str): The file path of the image to be loaded.
+            image_file (str): The file path of the image to be loaded.
+
+        Returns:
+            bool: True if successful, False if unsuccessful
         """
         try:
-            self.image = pygame.image.load(image)
+            self.image = pygame.image.load(image_file)
             self.blit()
             return True
         except:
             return False
 
+    def load_image_pil(self, image_pil: Image.Image) -> bool:
+        """Loads a PIL Image object into the projector.
+
+        Args:
+            image_pil (Image.Image): The object being loaded
+
+        Returns:
+            bool: True if successful, False if unsuccessful
+        """
+        try:
+            image_data = image_pil.tobytes()  # type: ignore[reportUnknownMemberType]
+            self.image = pygame.image.frombuffer(image_data, image_pil.size, image_pil.mode)  # type: ignore[reportArgumentType]
+            self.blit()
+            return True
+        except:
+            return False
+
+    def get_image_pil(self) -> Image.Image:
+        """Get PIL image object from pygame display"""
+        bytes_data = pygame.image.tostring(self.image, "RGBA")
+        image_pil = Image.frombytes("RGBA", self.image.get_size(), bytes_data)  # type: ignore[reportUnknownMemberType]
+        return image_pil
+
     def blit(self):
-        """
-        Blits the loaded image onto the screen. Auto-sizes image depending on screen resolution.
-        """
+        """Blits the loaded image onto the screen. Auto-sizes image depending on screen resolution."""
         self.screen.fill((0, 0, 0))
         sw, sh = self.resolution
         iw, ih = self.image.get_width(), self.image.get_height()

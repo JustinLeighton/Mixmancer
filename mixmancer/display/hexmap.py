@@ -1,10 +1,10 @@
 import pygame
 import math
+from PIL import Image
 
 
 class HexMap:
-    """
-    A class representing a hexagonal map.
+    """Hexmap object. Displays a hexagonal map and allows for movement and exploration.
 
     Attributes:
         image (pygame.Surface): The image representing the map.
@@ -59,8 +59,7 @@ class HexMap:
         self.location_pixel = self.grid_to_pixel(self.location_grid)
 
     def check_stagger(self, grid_location: tuple[int, int]) -> bool:
-        """
-        Check if current location is on a staggered hex row or not.
+        """Check if current location is on a staggered hex row or not.
 
         Args:
             grid_location (tuple[int, int]): The grid location (row, column).
@@ -82,8 +81,7 @@ class HexMap:
             file.truncate(0)
 
     def grid_to_pixel(self, grid_location: tuple[int, int]) -> tuple[float, float]:
-        """
-        Convert grid coordinates to pixel coordinates.
+        """Convert grid coordinates to pixel coordinates.
 
         Args:
             grid_location (tuple[int, int]): The grid location (row, column).
@@ -115,8 +113,7 @@ class HexMap:
         ]
 
     def check_on_screen(self, pixel_coordinates: tuple[float, float]) -> bool:
-        """
-        Check if given pixel coordinates are on the screen.
+        """Check if given pixel coordinates are on the screen.
 
         Args:
             pixel_coordinates (tuple[float, float]): The pixel coordinates (x, y).
@@ -133,8 +130,7 @@ class HexMap:
         return True
 
     def normalize_pixel_location(self, pixel_coordinates: tuple[float, float]) -> tuple[float, float]:
-        """
-        Normalize pixel coordinates given a screen frame centered on the player's frame of reference.
+        """Normalize pixel coordinates given a screen frame centered on the player's frame of reference.
 
         Args:
             pixel_coordinates (tuple[float, float]): The pixel coordinates (x, y).
@@ -148,8 +144,7 @@ class HexMap:
         )
 
     def get_history(self) -> list[tuple[float, float]]:
-        """
-        Get a list of historical grid points and convert to pixel coordinates.
+        """Get a list of historical grid points and convert to pixel coordinates.
 
         Returns:
             list[tuple[float, float]]: List of historical pixel coordinates.
@@ -162,8 +157,7 @@ class HexMap:
         return output
 
     def read_history(self, file_location: str) -> list[tuple[int, int]]:
-        """
-        Read historical grid coordinates from file.
+        """Read historical grid coordinates from file.
 
         Returns:
             list[tuple[int, int]]: List of historical grid coordinates.
@@ -195,12 +189,12 @@ class HexMap:
     def get_direction_mapping(self):
         """Translate direction into grid point coordinates with respect to the staggered grid layout."""
         mapping = {
-            "Upper Right": lambda: self.move((-1, 1 if self.stagger else 0)),
-            "Upper Left": lambda: self.move((-1, -1 if not self.stagger else 0)),
-            "Right": lambda: self.move((0, 1)),
-            "Left": lambda: self.move((0, -1)),
-            "Lower Right": lambda: self.move((1, 1 if self.stagger else 0)),
-            "Lower Left": lambda: self.move((1, -1 if not self.stagger else 0)),
+            "upper_right": lambda: self.move((-1, 1 if self.stagger else 0)),
+            "upper_left": lambda: self.move((-1, -1 if not self.stagger else 0)),
+            "right": lambda: self.move((0, 1)),
+            "left": lambda: self.move((0, -1)),
+            "lower_right": lambda: self.move((1, 1 if self.stagger else 0)),
+            "lower_left": lambda: self.move((1, -1 if not self.stagger else 0)),
         }
         return mapping
 
@@ -213,8 +207,7 @@ class HexMap:
         self.fog_flag = not self.fog_flag
 
     def move(self, direction: tuple[int, int]):
-        """
-        Move the player across the map in a specified direction.
+        """Move the player across the map in a specified direction.
 
         Args:
             direction (tuple[int, int]): The direction to move (row_change, column_change).
@@ -223,16 +216,15 @@ class HexMap:
         self.location_grid = (x, y)
 
     def command(self, command: str):
-        """
-        Execute a command. This routes all possible inputs from the tkinter widgets to the HexMap object.
+        """Execute a command. This routes all possible inputs from the tkinter widgets to the HexMap object.
 
         Args:
             command (str): The command to execute.
         """
         command_actions = {
-            "Undo": self.undo_movement,
-            "History": self.toggle_history_flag,
-            "Fog": self.toggle_fog_flag,
+            "undo": self.undo_movement,
+            "history": self.toggle_history_flag,
+            "fog": self.toggle_fog_flag,
             **self.get_direction_mapping(),
         }
 
@@ -241,15 +233,30 @@ class HexMap:
             action()
             self.update()
 
-    def dump(self):
-        """Dump an image of the current frame of the map image."""
-        temp_file = "./assets/map/tmp.png"
+    def get_current_surface(self) -> pygame.Surface:
+        """Get the current playing surface of the hexmap
+
+        Returns:
+            pygame.Surface: The current cropped map centered on player location
+        """
         surface = pygame.Surface((self.resolution[0], self.resolution[1]))
         surface.fill((0, 0, 0))
         surface.blit(self.image, self.frame())
 
         # Draw current location
         pygame.draw.polygon(surface, color=self.yellow, points=self.hex_points(), width=3)
+        return surface
 
+    def get_current_surface_PIL(self) -> Image.Image:
+        """Convert pygame surface to PIL image object"""
+        surface = self.get_current_surface()
+        image_data = pygame.image.tostring(surface, "RGBA")
+        image_pil = Image.frombytes("RGBA", surface.get_size(), image_data)  # type: ignore[reportUnknownMemberType]
+        return image_pil
+
+    def dump(self) -> str:
+        """Dump an image of the current frame of the map image."""
+        temp_file = "./assets/map/tmp.png"
+        surface = self.get_current_surface()
         pygame.image.save(surface, temp_file)
         return temp_file
