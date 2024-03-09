@@ -8,6 +8,7 @@ class Mixer:
 
     def __init__(self):
         self.sfx_volume = 0.5
+        self.active_sound_effects: list[pygame.mixer.Sound] = []  # Keep track of active sound effects
 
     def play_music(self, music_path: str):
         """Plays an .mp3 file through pygame music mixer"""
@@ -19,6 +20,13 @@ class Mixer:
         sound_effect = pygame.mixer.Sound(sfx_path)
         sound_effect.set_volume(self.sfx_volume)
         sound_effect.play()
+        self.active_sound_effects.append(sound_effect)  # Keep track of active sound effect
+
+    def stop_sfx_sounds(self):
+        """Stops all active sound effects"""
+        for sound_effect in self.active_sound_effects:
+            sound_effect.stop()
+        self.active_sound_effects.clear()  # Clear the list of active sound effects
 
     def set_volume(self, volume_string: str, channel: str):
         """Convert input to float then pass to set_music_volume
@@ -74,7 +82,3 @@ class Mixer:
             self.sfx_volume = volume
         else:
             raise ValueError("Volume must be between 0 and 1")
-
-    def stop_sfx_sounds(self):
-        """Stop pygame mixer sounds from playing"""
-        pygame.mixer.stop()

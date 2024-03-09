@@ -56,6 +56,11 @@ class StartFrame(ttk.Frame):
             self.left_frame, command=lambda v, c="sfx": controller.mixer.set_volume(v, c)  # type: ignore[reportUnknownMemberType]
         )
 
+        # Sfx stopper
+        self.button_container["sfx_stopper"] = CustomButton(
+            self.left_frame, text="Stop Effect", command=controller.mixer.stop_sfx_sounds
+        )
+
         # Settings button
         self.button_container["settings_selector"] = CustomButton(
             self.left_frame, text="Settings", command=lambda: controller.show_frame(SettingsFrame)
@@ -71,7 +76,7 @@ class StartFrame(ttk.Frame):
 
         # Place widgets
         for _, widget in self.button_container.items():
-            widget.pack(padx=5, pady=5, anchor=tk.NW)
+            widget.pack(padx=5, pady=5)
 
         # Image preview
         self.label_image_preview = CustomImage(self.right_frame)
@@ -228,22 +233,23 @@ class SfxFrame(ttk.Frame):
 class HexMapFrame(ttk.Frame):
     """Container for hexmap control buttons"""
 
-    def __init__(self, parent: ttk.Frame, controller: Controller):
+    def __init__(self, parent: ttk.Frame, controller: Controller, width: int = 120, height: int = 300):
         ttk.Frame.__init__(self, parent, style="Custom.TFrame")
         self.controller = controller
         self.parent = parent
+        self.config(width=width, height=height)
         self.visible = False
         self.button_container: dict[str, SquareButton] = {}
         self.button_config: dict[str, tuple[int, int]] = {
-            "upper_left": (25, 0),
-            "upper_right": (55, 0),
-            "left": (10, 30),
-            "right": (70, 30),
-            "lower_left": (25, 60),
-            "lower_right": (55, 60),
-            "history": (10, 90),
-            "undo": (40, 90),
-            "fog": (70, 90),
+            "upper_left": (20, 0),
+            "upper_right": (60, 0),
+            "left": (0, 40),
+            "right": (80, 40),
+            "lower_left": (20, 80),
+            "lower_right": (60, 80),
+            "history": (0, 120),
+            "undo": (40, 120),
+            "fog": (80, 120),
         }
         for name, coordinates in self.button_config.items():
             image_path = f"assets/app/{name}.png"
@@ -258,11 +264,11 @@ class HexMapFrame(ttk.Frame):
 
     def update(self):
         """Update hexmap frame to hide/show buttons"""
-        if not self.visible and not self.controller.hexmap_flag:
+        ttk.Frame().update()
+        if self.visible and not self.controller.hexmap_flag:
             self.hide_buttons()
         elif not self.visible and self.controller.hexmap_flag:
             self.show_buttons()
-        super().update()
 
     def hide_buttons(self):
         """Hide hexmap control buttons"""
@@ -276,14 +282,7 @@ class HexMapFrame(ttk.Frame):
         for _, btn in self.button_container.items():
             x, y = btn.coordinates
             print(x, y)
-            print(btn.winfo_x(), btn.winfo_y())
-            print(btn.winfo_rootx(), btn.winfo_rooty())
-            btn.pack()
-            print("Placed! ---")
-            print(x, y)
-            print(btn.winfo_x(), btn.winfo_y())
-            print(btn.winfo_rootx(), btn.winfo_rooty())
-            print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+            btn.place(x=x, y=y)
 
 
 class SettingsFrame(ttk.Frame):

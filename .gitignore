@@ -1,7 +1,6 @@
 *.mp3
 *.wav
 *.png
-*.jpg
 *.jpeg
 *.pyc
 *.txt
@@ -14,3 +13,9 @@ coverage.xml
 .vscode
 .pytest_cache
 htmlcov*
+
+assets/img/*.png
+assets/img/*.jpg
+assets/map/*.png
+assets/music/*.mp3
+assets/sfx/*.wav
