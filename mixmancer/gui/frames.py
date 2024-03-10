@@ -3,7 +3,7 @@ from tkinter import ttk
 import os
 from PIL import Image, ImageTk
 
-from typing import Literal, Union
+from typing import Literal, Union, Any, Callable
 
 from mixmancer.gui.controller import Controller
 from mixmancer.gui.theme import CustomButton, CustomImage, CustomSlider, CustomLabel, SquareButton
@@ -59,11 +59,6 @@ class StartFrame(ttk.Frame):
         # Sfx stopper
         self.button_container["sfx_stopper"] = CustomButton(
             self.left_frame, text="Stop Effect", command=controller.mixer.stop_sfx_sounds
-        )
-
-        # Settings button
-        self.button_container["settings_selector"] = CustomButton(
-            self.left_frame, text="Settings", command=lambda: controller.show_frame(SettingsFrame)
         )
 
         # Hexmap button
@@ -198,46 +193,83 @@ class ImageFrame(ttk.Frame):
         self.layout_thumbnails()
 
 
-class MusicFrame(ttk.Frame):
+class SearchableFrame(ttk.Frame):
+    """Main selection frame for music and sound effects, with searchability"""
+
+    def __init__(
+        self,
+        parent: ttk.Frame,
+        controller: Controller,
+        file_directory: str,
+        extension: str,
+        callback: Callable[..., Any],
+    ):
+        ttk.Frame.__init__(self, parent, style="Custom.TFrame")
+        self.controller = controller
+        self.file_dir = file_directory
+        self.extension = extension
+        self.callback = callback
+        self.buttons: list[ttk.Button] = []
+
+        self.search_var = tk.StringVar()
+        self.search_var.trace_add("write", self.filter_sfx_list)
+        search_entry = ttk.Entry(self, textvariable=self.search_var, width=20)
+        search_entry.pack(side=tk.TOP, padx=10, pady=10)
+
+        self.load_buttons()
+
+    def load_buttons(self):
+        """Load sound effect buttons"""
+        if os.path.isdir(self.file_dir):
+            self.buttons.clear()
+            mp3_files = [file for file in os.listdir(self.file_dir) if file.lower().endswith(self.extension)]
+            for mp3_file in mp3_files:
+                selectable_file = os.path.join(self.file_dir, mp3_file)
+                button = ttk.Button(self, text=mp3_file, command=lambda file=selectable_file: self.sfx_selected(file))
+                button.pack()
+                self.buttons.append(button)
+
+    def sfx_selected(self, selectable_file: str):
+        """Function to execute when a sfx file button is selected"""
+        self.callback(selectable_file)
+        self.controller.show_frame(StartFrame)
+
+    def filter_sfx_list(self, *args: Any):
+        """Filter the list of sound effects based on the search query"""
+        query = self.search_var.get().lower()
+        for button in self.buttons:
+            if query in button["text"].lower():
+                button.pack()
+            else:
+                button.pack_forget()
+
+
+class MusicFrame(SearchableFrame):
     """Display .mp3 files in assets/music for selection"""
 
     def __init__(self, parent: ttk.Frame, controller: Controller):
-        ttk.Frame.__init__(self, parent, style="Custom.TFrame")
-        self.controller = controller
-
-        music_dir = "assets/music"
-        if os.path.isdir(music_dir):
-            mp3_files = [file for file in os.listdir(music_dir) if file.lower().endswith(".mp3")]
-            for mp3_file in mp3_files:
-                music_file = os.path.join(music_dir, mp3_file)
-                button = CustomButton(self, text=mp3_file, command=lambda file=music_file: self.music_selected(file))
-                button.pack()
-
-    def music_selected(self, music_file: str):
-        """Function to execute when a music file button is selected"""
-        self.controller.mixer.play_music(music_file)
-        self.controller.show_frame(StartFrame)
+        SearchableFrame.__init__(
+            self,
+            parent,
+            controller,
+            file_directory="assets/music",
+            extension=".mp3",
+            callback=controller.mixer.play_music,
+        )
 
 
-class SfxFrame(ttk.Frame):
+class SfxFrame(SearchableFrame):
     """Display wav in assets/sfx files for selection"""
 
     def __init__(self, parent: ttk.Frame, controller: Controller):
-        ttk.Frame.__init__(self, parent, style="Custom.TFrame")
-        self.controller = controller
-
-        sfx_dir = "assets/sfx"
-        if os.path.isdir(sfx_dir):
-            mp3_files = [file for file in os.listdir(sfx_dir) if file.lower().endswith(".wav")]
-            for mp3_file in mp3_files:
-                sfx_file = os.path.join(sfx_dir, mp3_file)
-                button = CustomButton(self, text=mp3_file, command=lambda file=sfx_file: self.sfx_selected(file))
-                button.pack()
-
-    def sfx_selected(self, sfx_file: str):
-        """Function to execute when a sfx file button is selected"""
-        self.controller.mixer.play_sfx(sfx_file)
-        self.controller.show_frame(StartFrame)
+        SearchableFrame.__init__(
+            self,
+            parent,
+            controller,
+            file_directory="assets/sfx",
+            extension=".wav",
+            callback=controller.mixer.play_sfx,
+        )
 
 
 class HexMapFrame(ttk.Frame):
@@ -316,24 +348,14 @@ class MenuFrame(ttk.Frame):
 
 
 class MenuBar(tk.Menu):
-    def __init__(self, master: tk.Tk):
+    """Top menu bar of application window"""
+
+    def __init__(self, controller: Controller):
         super().__init__()
 
         # Create a "File" menu
         file_menu = tk.Menu(self, tearoff=0)
-        file_menu.add_command(label="New", command=self.do_something)
-        file_menu.add_command(label="Open", command=self.do_something)
+        file_menu.add_command(label="Settings", command=lambda: controller.show_frame(SettingsFrame))
         file_menu.add_separator()
-        file_menu.add_command(label="Exit", command=master.destroy)
+        file_menu.add_command(label="Exit", command=controller.destroy)
         self.add_cascade(label="File", menu=file_menu)
-
-        # Create an "Edit" menu
-        edit_menu = tk.Menu(self, tearoff=0)
-        edit_menu.add_command(label="Cut", command=self.do_something)
-        edit_menu.add_command(label="Copy", command=self.do_something)
-        edit_menu.add_command(label="Paste", command=self.do_something)
-        self.add_cascade(label="Edit", menu=edit_menu)
-
-    def do_something(self):
-        """Placeholder"""
-        print("Menu item clicked!")
