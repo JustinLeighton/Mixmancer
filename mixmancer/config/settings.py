@@ -4,10 +4,8 @@ class Settings:
     """
 
     def __init__(self):
-        self.projector_width = 1200
-        self.projector_height = 900
-        self.app_width = 600
-        self.app_height = 400
+        self.projector_resolution: tuple[int, int] = (1200, 900)
+        self.app_resolution: tuple[int, int] = (600, 400)
         self.display = 1
         self.color = {
             "white": "#ffffff",
@@ -15,3 +13,11 @@ class Settings:
             "grey": "#36393f",
             "purple": "#7289da",
         }
+
+    def set_projector_resolution(self, resolution: tuple[int, int]):
+        """Set projector resolution tuple (width/height)"""
+        self.projector_resolution = resolution
+
+    def set_app_resolution(self, resolution: tuple[int, int]):
+        """Set app resolution tuple (width/height)"""
+        self.app_resolution = resolution

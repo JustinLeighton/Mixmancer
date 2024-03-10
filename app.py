@@ -7,7 +7,7 @@ Created on Thu May 18 23:31:42 2023
 
 import pygame
 
-from mixmancer.gui.frames import Controller, StartFrame, ImageFrame, MusicFrame, SfxFrame, SettingsFrame
+from mixmancer.gui.frames import Controller, StartFrame, ImageFrame, MusicFrame, SfxFrame, SettingsFrame, MenuBar
 from mixmancer.gui.theme import CustomTheme
 
 
@@ -32,6 +32,10 @@ class App(Controller):
             frame = F(self.container, self)
             self.frames[F] = frame
         self.show_frame(StartFrame)
+
+        # Initialize menu bar
+        menubar = MenuBar(self)
+        self.config(menu=menubar)
 
 
 if __name__ == "__main__":

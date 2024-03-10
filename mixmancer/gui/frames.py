@@ -86,10 +86,20 @@ class StartFrame(ttk.Frame):
     def update(self):
         """Modify update method to update the configured preview image"""
         super().update()
+        self.update_preview_image()
+        self.button_container["hexmap_frame"].update()
+        self.update_labels()
+
+    def update_preview_image(self):
+        """Update preview image in app window"""
         if self.controller.image_preview is not None:  # type: ignore[reportUnnecessaryComparison]
             self.controller.update_thumnail_image()
             self.label_image_preview.configure(image=self.controller.image_preview)
-        self.button_container["hexmap_frame"].update()
+
+    def update_labels(self):
+        """Update label text in app window"""
+        self.button_container["image_selection"].configure(text=self.controller.image_projector.get_current_image())  # type: ignore
+        self.button_container["music_selection"].configure(text=self.controller.mixer.get_current_track())  # type: ignore
 
     def resize_preview_image(self, event: Literal[tk.EventType.ResizeRequest]):
         """Resizes preview image on app window when window resizes
@@ -98,17 +108,17 @@ class StartFrame(ttk.Frame):
             event (Literal[tk.EventType.ResizeRequest]): Tkinter window resize event
         """
         if event.widget == self:  # type: ignore[reportUnknownMemberType]
-            if self.controller.settings.app_height != event.height or self.controller.settings.app_width != event.width:  # type: ignore[reportUnknownMemberType]
-                self.controller.settings.app_height, self.controller.settings.app_width = event.height, event.width  # type: ignore[reportUnknownMemberType]
+            if (event.width, event.height) != self.controller.settings.app_resolution:  # type: ignore[reportUnknownMemberType]
+                self.controller.settings.set_app_resolution((event.width, event.height))  # type: ignore[reportUnknownMemberType]
                 self.controller.image_thumbnail_dimensions = self.get_preview_image_size()
-                self.update()
+                self.update_preview_image()
 
     def get_preview_image_size(self, padding: int = 5) -> tuple[int, int]:
         """Get size available for preview image within app window
 
         REPLACE NUMBERS WITH DYNAMIC REFERENCES"""
-        image_width: int = self.controller.settings.app_width - 150 - padding * 2
-        image_height: int = self.controller.settings.app_height - 5 - padding * 2
+        image_width: int = self.controller.settings.app_resolution[0] - 150 - padding * 2
+        image_height: int = self.controller.settings.app_resolution[1] - 5 - padding * 2
         if image_width < 100 or image_height < 100:
             image_width, image_height = 100, 100
         return image_width, image_height
@@ -296,3 +306,34 @@ class SettingsFrame(ttk.Frame):
 
         button = CustomButton(self, text="Back to Start Page", command=lambda: controller.show_frame(StartFrame))
         button.pack()
+
+
+class MenuFrame(ttk.Frame):
+    """Settings menu. Change settings and write changes to database."""
+
+    def __init__(self, parent: ttk.Frame, controller: Controller):
+        ttk.Frame.__init__(self, parent, style="Custom.TFrame")
+
+
+class MenuBar(tk.Menu):
+    def __init__(self, master: tk.Tk):
+        super().__init__()
+
+        # Create a "File" menu
+        file_menu = tk.Menu(self, tearoff=0)
+        file_menu.add_command(label="New", command=self.do_something)
+        file_menu.add_command(label="Open", command=self.do_something)
+        file_menu.add_separator()
+        file_menu.add_command(label="Exit", command=master.destroy)
+        self.add_cascade(label="File", menu=file_menu)
+
+        # Create an "Edit" menu
+        edit_menu = tk.Menu(self, tearoff=0)
+        edit_menu.add_command(label="Cut", command=self.do_something)
+        edit_menu.add_command(label="Copy", command=self.do_something)
+        edit_menu.add_command(label="Paste", command=self.do_something)
+        self.add_cascade(label="Edit", menu=edit_menu)
+
+    def do_something(self):
+        """Placeholder"""
+        print("Menu item clicked!")

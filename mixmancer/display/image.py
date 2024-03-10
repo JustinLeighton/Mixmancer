@@ -1,5 +1,6 @@
 import pygame
 from PIL import Image
+import os
 
 
 class ImageProjector:
@@ -25,6 +26,7 @@ class ImageProjector:
         self.screen = pygame.display.set_mode(resolution, flags=pygame.NOFRAME, display=display)
         self.status = False
         self.image: pygame.Surface = None  # type: ignore[reportAttributeAccessIssue]
+        self.current_image: str = ""
 
     def load_image_file(self, image_file: str) -> bool:
         """Loads an image from file into the projector.
@@ -38,6 +40,7 @@ class ImageProjector:
         try:
             self.image = pygame.image.load(image_file)
             self.blit()
+            self.set_current_image(os.path.basename(image_file))
             return True
         except:
             return False
@@ -55,9 +58,21 @@ class ImageProjector:
             image_data = image_pil.tobytes()  # type: ignore[reportUnknownMemberType]
             self.image = pygame.image.frombuffer(image_data, image_pil.size, image_pil.mode)  # type: ignore[reportArgumentType]
             self.blit()
+            self.set_current_image("hexmap")
             return True
         except:
             return False
+
+    def set_current_image(self, image_name: str):
+        """Set the name of the current image loaded"""
+        self.current_image = image_name
+
+    def get_current_image(self, max_length: int = 15) -> str:
+        """Get the name of the current image loaded"""
+        file_name = os.path.basename(self.current_image)
+        if len(file_name) > max_length:
+            return file_name[:max_length] + "..."
+        return file_name
 
     def get_image_pil(self) -> Image.Image:
         """Get PIL image object from pygame display"""

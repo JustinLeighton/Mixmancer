@@ -1,6 +1,7 @@
 import pygame
 from typing import Callable
 from mixmancer.exceptions import InvalidVolumeError, InvalidChannelError
+import os
 
 
 class Mixer:
@@ -9,11 +10,20 @@ class Mixer:
     def __init__(self):
         self.sfx_volume = 0.5
         self.active_sound_effects: list[pygame.mixer.Sound] = []  # Keep track of active sound effects
+        self.current_track: str = ""
 
     def play_music(self, music_path: str):
         """Plays an .mp3 file through pygame music mixer"""
-        pygame.mixer.music.load(music_path)
+        self.current_track = music_path
+        pygame.mixer.music.load(self.current_track)
         pygame.mixer.music.play()
+
+    def get_current_track(self, max_length: int = 15) -> str:
+        """Returns current music track playing"""
+        file_name = os.path.basename(self.current_track)
+        if len(file_name) > max_length:
+            return file_name[:max_length] + "..."
+        return file_name
 
     def play_sfx(self, sfx_path: str):
         """Plays an .wav file through pygame mixer"""

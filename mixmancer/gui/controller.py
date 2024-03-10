@@ -20,8 +20,8 @@ class Controller(tk.Tk):
         self.container.pack(fill=tk.BOTH, expand=True)
         self.frames: dict[type[ttk.Frame], ttk.Frame] = {}
         self.active_frame: type[ttk.Frame]
-        self.image_projector = ImageProjector((1200, 900), 1)
-        self.hexmap = HexMap("assets/map/map.png", (1200, 900), 56, (-2, -6), (43, 131))
+        self.image_projector = ImageProjector(self.settings.projector_resolution, 1)
+        self.hexmap = HexMap("assets/map/map.png", self.settings.projector_resolution, 56, (-2, -6), (43, 131))
         self.image_preview: ImageTk.PhotoImage = None  # type: ignore[reportAttributeAccessIssue]
         self.sfx_volume: float = 0.5
         self.mixer = Mixer()

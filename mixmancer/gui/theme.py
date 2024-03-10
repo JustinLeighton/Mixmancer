@@ -1,6 +1,7 @@
 from tkinter import ttk
 from PIL import Image, ImageTk
 from typing import Any, Optional, Callable
+from mixmancer.config.settings import Settings
 
 
 class CustomTheme:
@@ -14,18 +15,12 @@ class CustomTheme:
 
     def __init__(self):
         self.style = ttk.Style()
-        self.color = {
-            "white": "#ffffff",
-            "black": "#000000",
-            "grey": "#36393f",
-            "purple": "#7289da",
-        }
+        self.color = Settings().color
         self.font_size: int = 12
         self.padding: tuple[int, int] = (5, 5)
         self.borderwidth: int = 0
 
         self.style.theme_use("clam")
-        # self.style.theme_use("default")
 
         frame_config: dict[str, Any] = {"background": self.color["grey"]}
         button_config: dict[str, Any] = {
