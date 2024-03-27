@@ -52,6 +52,7 @@ class CustomTheme:
         }
 
         self.style.configure("TFrame", **frame_config)  # type: ignore[reportUnknownMemberType]
+        self.style.configure("Custom.TFrame", **frame_config)  # type: ignore[reportUnknownMemberType]
         self.style.configure("Custom.TButton", **button_config)  # type: ignore[reportUnknownMemberType]
         self.style.configure("TLabel", **label_config)  # type: ignore[reportUnknownMemberType]
         self.style.configure("Horizontal.TScale", **scale_config)  # type: ignore[reportUnknownMemberType]

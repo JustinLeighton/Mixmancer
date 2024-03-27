@@ -3,7 +3,7 @@ from tkinter import ttk
 import os
 from PIL import Image, ImageTk
 
-from typing import Literal, Union, Any, Callable, Optional
+from typing import Literal, Union, Any, Callable
 
 from mixmancer.gui.controller import Controller
 from mixmancer.gui.theme import CustomButton, CustomImage, CustomSlider, CustomLabel, SquareButton
@@ -127,13 +127,15 @@ class ImageFrame(ttk.Frame):
         self.controller = controller
 
         # Create a search bar
+        self.query: str = ""
         self.search_var = tk.StringVar()
         self.search_var.trace_add("write", self.filter_images)
         self.search_entry = ttk.Entry(self, textvariable=self.search_var)
         self.search_entry.pack(side="top", fill="x")
 
         # Create a canvas for scrollable content
-        self.canvas = tk.Canvas(self, borderwidth=0)
+        background: str = ttk.Style().lookup("TFrame", "background")  # type: ignore
+        self.canvas = tk.Canvas(self, highlightthickness=0, background=background)  # type: ignore
         self.canvas.pack(side="left", fill="both", expand=True)
 
         # Add a vertical scrollbar to the canvas
@@ -174,7 +176,7 @@ class ImageFrame(ttk.Frame):
             self.thumbnail_buttons.append(btn)
         self.layout_thumbnails()
 
-    def layout_thumbnails(self, query: Optional[str] = ""):
+    def layout_thumbnails(self):
         """Dynamically adjusts thumbnail layout based on window width"""
         for widget in self.inner_frame.winfo_children():
             widget.grid_forget()
@@ -182,7 +184,7 @@ class ImageFrame(ttk.Frame):
         num_columns = max(1, width // 120)
         counter = 0
         for _, btn in enumerate(self.thumbnail_buttons):
-            if query in btn["text"].lower():
+            if self.query in btn["text"].lower():
                 row = counter // num_columns
                 column = counter % num_columns
                 btn.grid(row=row, column=column, padx=5, pady=5)
@@ -204,8 +206,8 @@ class ImageFrame(ttk.Frame):
 
     def filter_images(self, *args: Any):
         """Filter the list of sound effects based on the search query"""
-        query = self.search_var.get().lower()
-        self.layout_thumbnails(query)
+        self.query = self.search_var.get().lower()
+        self.layout_thumbnails()
 
 
 class SearchableFrame(ttk.Frame):
