@@ -3,7 +3,7 @@ from tkinter import ttk
 import os
 from PIL import Image, ImageTk
 
-from typing import Literal, Union, Any, Callable
+from typing import Literal, Union, Any, Callable, Optional
 
 from mixmancer.gui.controller import Controller
 from mixmancer.gui.theme import CustomButton, CustomImage, CustomSlider, CustomLabel, SquareButton
@@ -126,6 +126,12 @@ class ImageFrame(ttk.Frame):
         ttk.Frame.__init__(self, parent, style="Custom.TFrame")
         self.controller = controller
 
+        # Create a search bar
+        self.search_var = tk.StringVar()
+        self.search_var.trace_add("write", self.filter_images)
+        self.search_entry = ttk.Entry(self, textvariable=self.search_var)
+        self.search_entry.pack(side="top", fill="x")
+
         # Create a canvas for scrollable content
         self.canvas = tk.Canvas(self, borderwidth=0)
         self.canvas.pack(side="left", fill="both", expand=True)
@@ -164,19 +170,23 @@ class ImageFrame(ttk.Frame):
                 self.inner_frame, image=tk_img, command=lambda name=image_path: self.thumbnail_selected(name)
             )
             btn.image = tk_img  # type: ignore[reportAttributeAccessIssue]
+            btn.configure(text=image_file)
             self.thumbnail_buttons.append(btn)
         self.layout_thumbnails()
 
-    def layout_thumbnails(self):
+    def layout_thumbnails(self, query: Optional[str] = ""):
         """Dynamically adjusts thumbnail layout based on window width"""
         for widget in self.inner_frame.winfo_children():
             widget.grid_forget()
         width = self.winfo_width()
         num_columns = max(1, width // 120)
-        for i, btn in enumerate(self.thumbnail_buttons):
-            row = i // num_columns
-            column = i % num_columns
-            btn.grid(row=row, column=column, padx=5, pady=5)
+        counter = 0
+        for _, btn in enumerate(self.thumbnail_buttons):
+            if query in btn["text"].lower():
+                row = counter // num_columns
+                column = counter % num_columns
+                btn.grid(row=row, column=column, padx=5, pady=5)
+                counter += 1
 
     def thumbnail_selected(self, image_path: str):
         """Selection function when image is selected"""
@@ -191,6 +201,11 @@ class ImageFrame(ttk.Frame):
         """Configures event functions"""
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
         self.layout_thumbnails()
+
+    def filter_images(self, *args: Any):
+        """Filter the list of sound effects based on the search query"""
+        query = self.search_var.get().lower()
+        self.layout_thumbnails(query)
 
 
 class SearchableFrame(ttk.Frame):
@@ -355,6 +370,7 @@ class MenuBar(tk.Menu):
 
         # Create a "File" menu
         file_menu = tk.Menu(self, tearoff=0)
+        file_menu.add_command(label="Home", command=lambda: controller.show_frame(StartFrame))
         file_menu.add_command(label="Settings", command=lambda: controller.show_frame(SettingsFrame))
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=controller.destroy)
