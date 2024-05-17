@@ -19,4 +19,4 @@ assets/img/*.jpg
 assets/map/*.png
 assets/music/*.mp3
 assets/sfx/*.wav
-assets/dice/*.json
+assets/dice/*/ *.json
