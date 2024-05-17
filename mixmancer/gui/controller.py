@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
+from typing import Any
 
 from mixmancer.display.image import ImageProjector
 from mixmancer.display.hexmap import HexMap
@@ -21,7 +22,7 @@ class Controller(tk.Tk):
         self.frames: dict[type[ttk.Frame], ttk.Frame] = {}
         self.active_frame: type[ttk.Frame]
         self.image_projector = ImageProjector(self.settings.projector_resolution, 1)
-        self.hexmap = HexMap("assets/map/map.png", self.settings.projector_resolution, 56, (-2, -6), (43, 131))
+        self.hexmap = HexMap("assets/map/tmp.png", self.settings.projector_resolution, 56, (-2, -6), (43, 131))
         self.image_preview: ImageTk.PhotoImage = None  # type: ignore[reportAttributeAccessIssue]
         self.sfx_volume: float = 0.5
         self.mixer = Mixer()
@@ -69,10 +70,15 @@ class Controller(tk.Tk):
         self.update()
 
     def update(self):
+        """Updates tkinter window"""
         super().update()
         self.frames[self.active_frame].update()
+        self.image_projector.update()
 
     def hexmap_controls(self, command: str):
         """Route hexmap object commands"""
         self.hexmap.command(command)
         self.display_hexmap()
+
+    def process_data(self, data: list[Any]):
+        self.image_projector.process_data(data)

@@ -1,6 +1,9 @@
 import pygame
 from PIL import Image
 import os
+from typing import Any
+from mixmancer.display.dice import generate_dice
+from mixmancer.config.schema import DataModel
 
 
 class ImageProjector:
@@ -24,9 +27,62 @@ class ImageProjector:
         """
         self.resolution = resolution
         self.screen = pygame.display.set_mode(resolution, flags=pygame.NOFRAME, display=display)
-        self.status = False
-        self.image: pygame.Surface = None  # type: ignore[reportAttributeAccessIssue]
+        self.status: bool = False
+        self.image: pygame.Surface = pygame.Surface((self.resolution[0], self.resolution[1]))
         self.current_image: str = ""
+        self.dice_group: pygame.sprite.Group[Any] = pygame.sprite.Group()
+        self.spawn_dice(d20=1)
+
+    def spawn_dice(self, **kwargs: int) -> None:
+        """
+        Spawn dice objects for a die-roll from hedgebot.
+
+        Parameters:
+            **kwargs (int): Keyword arguments representing the count of each type of dice to add.
+                Supported dice types: 'd4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100'.
+
+        Returns:
+            None
+        """
+        self.clear_dice()
+        results: list[int] = []
+        for dice in ["d4", "d6", "d8", "d10", "d12", "d20", "d100"]:
+            if dice in kwargs.keys():
+                for _ in range(kwargs[dice]):
+                    new_dice = generate_dice(dice)
+                    self.dice_group.add(new_dice)
+                    results.append(new_dice.roll)
+        modifier = kwargs.get("modifier", 0)
+        if kwargs.get("advantage", False):
+            output = max(results) + modifier
+        else:
+            output = sum(results) + modifier
+        print(results)
+        print(output)
+
+    def update_dice(self, dt: int):
+        """
+        Updates the state of all dice objects in the dice group.
+
+        Parameters:
+            dt (int): The time elapsed since the last update, in milliseconds.
+        """
+        self.dice_group.update(dt=dt)
+
+    def clear_dice(self):
+        """Removes all dice objects from the dice group, effectively clearing the screen of dice"""
+        for die in self.dice_group:
+            die.kill()
+
+    def process_data(self, data: list[Any]):
+        """
+        Processes a list of data and spawns dice according to the provided data.
+
+        Parameters:
+        - data (list[Any]): A list of data to be processed. The data should correspond to the fields in the DataModel class.
+        """
+        data_dict = {key: value for key, value in zip(DataModel.model_fields.keys(), data)}
+        self.spawn_dice(**data_dict)
 
     def load_image_file(self, image_file: str) -> bool:
         """Loads an image from file into the projector.
@@ -91,4 +147,10 @@ class ImageProjector:
             t = sh / ih
         self.image = pygame.transform.scale(self.image, (t * iw, t * ih))
         self.screen.blit(self.image, ((sw - t * iw) / 2, (sh - t * ih) / 2))
+        self.dice_group.draw(self.screen)
+
+    def update(self):
+        """Update pygame display"""
+        self.update_dice(0)
+        self.blit()
         pygame.display.update()

@@ -6,9 +6,12 @@ Created on Thu May 18 23:31:42 2023
 """
 
 import pygame
+import threading
 
-from mixmancer.gui.frames import Controller, StartFrame, ImageFrame, MusicFrame, SfxFrame, SettingsFrame, MenuBar
+from mixmancer.gui.frames import Controller, StartFrame, MenuBar, get_frames
 from mixmancer.gui.theme import CustomTheme
+from mixmancer.api.api import start_fastapi, data_queue
+from mixmancer.config.parameters import FRAME_RATE
 
 
 class App(Controller):
@@ -26,9 +29,10 @@ class App(Controller):
         # Initialize pygame
         pygame.init()
         pygame.mixer.init()
+        self.clock = pygame.time.Clock()
 
         # Initialize frames
-        for F in (StartFrame, ImageFrame, MusicFrame, SfxFrame, SettingsFrame):
+        for F in get_frames():
             frame = F(self.container, self)
             self.frames[F] = frame
         self.show_frame(StartFrame)
@@ -39,5 +43,16 @@ class App(Controller):
 
 
 if __name__ == "__main__":
+    thread = threading.Thread(target=start_fastapi)
+    thread.daemon = True
+    thread.start()
+
     app = App()
-    app.mainloop()
+    while True:
+        app.update()
+        app.clock.tick(FRAME_RATE)
+
+        # Check the queue for new data
+        while not data_queue.empty():
+            data = data_queue.get()
+            app.process_data(data)

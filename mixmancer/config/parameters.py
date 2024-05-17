@@ -1,0 +1,1 @@
+FRAME_RATE: int = 20

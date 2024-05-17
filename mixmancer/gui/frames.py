@@ -377,3 +377,7 @@ class MenuBar(tk.Menu):
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=controller.destroy)
         self.add_cascade(label="File", menu=file_menu)
+
+
+def get_frames():
+    return StartFrame, ImageFrame, MusicFrame, SfxFrame, SettingsFrame
