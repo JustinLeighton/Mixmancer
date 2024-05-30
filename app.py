@@ -9,7 +9,6 @@ import pygame
 import threading
 
 from mixmancer.gui.frames import Controller, StartFrame, MenuBar, get_frames
-from mixmancer.gui.theme import CustomTheme
 from mixmancer.api.api import start_fastapi, data_queue
 from mixmancer.config.parameters import FRAME_RATE
 
@@ -24,7 +23,6 @@ class App(Controller):
         self.title("Mixmancer")
         self.geometry(f"500x500")
         self.iconbitmap("assets/app/mixmancer.ico")  # type: ignore[reportUnknownMemberType]
-        CustomTheme()
 
         # Initialize pygame
         pygame.init()

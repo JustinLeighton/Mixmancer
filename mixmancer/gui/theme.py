@@ -13,9 +13,9 @@ class CustomTheme:
         y (int, optional): vertical pixal placement. Defaults to 0.
     """
 
-    def __init__(self):
+    def __init__(self, settings: Settings):
         self.style = ttk.Style()
-        self.color = Settings().color
+        self.color = settings.color
         self.font_size: int = 12
         self.padding: tuple[int, int] = (5, 5)
         self.borderwidth: int = 0
@@ -41,6 +41,13 @@ class CustomTheme:
             "slidercolor": self.color["white"],
             "borderwidth": self.borderwidth,
         }
+        entry_config: dict[str, Any] = {
+            "background": self.color["grey"],
+            "foreground": self.color["white"],
+            "font": ("Helvetica", self.font_size),
+            "padding": self.padding,
+            "borderwidth": self.borderwidth,
+        }
         square_button_config: dict[str, Any] = {
             "background": self.color["grey"],
             "foreground": self.color["white"],
@@ -56,6 +63,7 @@ class CustomTheme:
         self.style.configure("Custom.TButton", **button_config)  # type: ignore[reportUnknownMemberType]
         self.style.configure("TLabel", **label_config)  # type: ignore[reportUnknownMemberType]
         self.style.configure("Horizontal.TScale", **scale_config)  # type: ignore[reportUnknownMemberType]
+        self.style.configure("Custom.TEntry", **entry_config)  # type: ignore[reportUnknownMemberType]
         self.style.configure("Square.TButton", **square_button_config)  # type: ignore[reportUnknownMemberType]
 
 
@@ -94,6 +102,14 @@ class CustomImage(ttk.Label):
         self.image_photo: ImageTk.PhotoImage
         self.image_size: tuple[int, int] = (100, 100)
         self.image_dimension: tuple[int, int]
+
+
+class CustomEntry(ttk.Entry):
+    """Custom ttk.Entry widget with style theme"""
+
+    def __init__(self, master: ttk.Frame, **kwargs: Any):
+        super().__init__(master, **kwargs)
+        self.configure(style="Custom.TEntry")
 
 
 class SquareButton(ttk.Button):

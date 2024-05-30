@@ -1,0 +1,17 @@
+{
+    "projector_resolution": [
+        1280,
+        800
+    ],
+    "app_resolution": [
+        600,
+        400
+    ],
+    "display": 1,
+    "color": {
+        "white": "#ffffff",
+        "black": "#000000",
+        "grey": "#36393f",
+        "purple": "#7289da"
+    }
+}

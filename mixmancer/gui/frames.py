@@ -104,16 +104,14 @@ class StartFrame(ttk.Frame):
         """
         if event.widget == self:  # type: ignore[reportUnknownMemberType]
             if (event.width, event.height) != self.controller.settings.app_resolution:  # type: ignore[reportUnknownMemberType]
-                self.controller.settings.set_app_resolution((event.width, event.height))  # type: ignore[reportUnknownMemberType]
+                self.controller.settings.set_app_resolution(event.width, event.height)  # type: ignore[reportUnknownMemberType]
                 self.controller.image_thumbnail_dimensions = self.get_preview_image_size()
                 self.update_preview_image()
 
     def get_preview_image_size(self, padding: int = 5) -> tuple[int, int]:
-        """Get size available for preview image within app window
-
-        REPLACE NUMBERS WITH DYNAMIC REFERENCES"""
-        image_width: int = self.controller.settings.app_resolution[0] - 150 - padding * 2
-        image_height: int = self.controller.settings.app_resolution[1] - 5 - padding * 2
+        """Get size available for preview image within app window"""
+        image_width: int = int(self.controller.settings.get_app_resolution().x - 150 - padding * 2)
+        image_height: int = int(self.controller.settings.get_app_resolution().y - 5 - padding * 2)
         if image_width < 100 or image_height < 100:
             image_width, image_height = 100, 100
         return image_width, image_height
@@ -340,7 +338,6 @@ class HexMapFrame(ttk.Frame):
         self.visible = True
         for _, btn in self.button_container.items():
             x, y = btn.coordinates
-            print(x, y)
             btn.place(x=x, y=y)
 
 
@@ -350,11 +347,61 @@ class SettingsFrame(ttk.Frame):
     def __init__(self, parent: ttk.Frame, controller: Controller):
         ttk.Frame.__init__(self, parent, style="Custom.TFrame")
         self.controller = controller
-        label = tk.Label(self, text="Settings")
-        label.pack(pady=10, padx=10)
+        self.settings = self.controller.settings
 
-        button = CustomButton(self, text="Back to Start Page", command=lambda: controller.show_frame(StartFrame))
-        button.pack()
+        # Header
+        ttk.Label(self, text="Settings").pack()
+
+        # Projector
+        ttk.Label(self, text="\nProjector").pack(anchor="w")
+        self.resolution = CoordinateEntry(self, "Resolution", self.settings.projector_resolution)
+        self.display = CoordinateEntry(self, "Display", tuple([self.settings.display]))
+
+        # Hexmap
+        ttk.Label(self, text="\nHexmap").pack(anchor="w")
+        self.hexmap_size = CoordinateEntry(self, "Hex Size", tuple([self.settings.hex_size]))
+        self.hexmap_offset = CoordinateEntry(self, "Offset", self.settings.hexmap_offset)
+        self.hexmap_start = CoordinateEntry(self, "Start", self.settings.hexmap_start)
+
+        # Buttons
+        button_frame = ttk.Frame(self, style="Custom.TFrame")
+        CustomButton(button_frame, text="Accept", command=lambda: self.update_settings()).pack(side=tk.LEFT)
+        CustomButton(button_frame, text="Cancel", command=lambda: controller.show_frame(StartFrame)).pack(side=tk.LEFT)
+        button_frame.pack(pady=10)
+
+    def update_settings(self):
+        self.settings.projector_resolution = self.resolution.get()  # type: ignore
+        self.settings.display = self.display.get()[0]
+        self.settings.hex_size = self.hexmap_size.get()[0]
+        self.settings.hexmap_offset = self.hexmap_offset.get()  # type: ignore
+        self.settings.hexmap_start = self.hexmap_start.get()  # type: ignore
+        self.controller.update_settings(self.settings)
+        self.controller.show_frame(StartFrame)
+
+
+class CoordinateEntry(ttk.Frame):
+    def __init__(self, master: ttk.Frame, label: str, values: tuple[int, ...]):
+        ttk.Frame.__init__(self, master=master, style="Custom.TFrame")
+        label_frame = ttk.Frame(self, width=100, height=20, style="Custom.TFrame")
+        label_frame.pack_propagate(False)
+        ttk.Label(label_frame, text=label).pack(side=tk.LEFT)
+        label_frame.pack(side=tk.LEFT, padx=2, pady=2)
+        self.entry_boxes: list[ttk.Entry] = []
+        for v in values:
+            self.entry_boxes.append(self.generate_entry(v))
+        self.pack(anchor="w")
+
+    def generate_entry(self, value: int) -> ttk.Entry:
+        widget = ttk.Entry(self, validate="key", validatecommand=(self.register(self.validate_int), "%P"), width=5)
+        widget.pack(side=tk.LEFT, padx=2, pady=2)
+        widget.insert(0, str(value))
+        return widget
+
+    def validate_int(self, value_if_allowed: str) -> bool:
+        return value_if_allowed.isdigit() or value_if_allowed == ""
+
+    def get(self) -> tuple[int, ...]:
+        return tuple(int(x.get()) for x in self.entry_boxes)
 
 
 class MenuFrame(ttk.Frame):

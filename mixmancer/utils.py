@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+from mixmancer.config.data_models import Coordinate
 
 
 def check_file_exists(file_path: str) -> bool:
@@ -31,36 +32,25 @@ def check_file_exists(file_path: str) -> bool:
     return True
 
 
-def calculate_resized_dimensions(image_dimensions: tuple[int, int], target_location: tuple[int, int]):
+def calculate_resized_dimensions(image_dimensions: Coordinate, target_location: Coordinate) -> Coordinate:
     """Calculate the resized dimensions of an image while maintaining aspect ratio,
     maximizing the space within the target location.
 
     Args:
-    - image_dimensions (tuple): Dimensions of the original image (width, height).
-    - target_location (tuple): Planned location of the image (x, y) within its container.
+    - image_dimensions (Coordinate): Dimensions of the original image (width, height).
+    - target_location (Coordinate): Planned location of the image (x, y) within its container.
 
     Returns:
-    - tuple: Resized dimensions (width, height).
+    - Coordinate: Resized dimensions (width, height).
     """
-    # Unpack image dimensions
-    image_width: int
-    image_height: int
-    available_width: int
-    available_height: int
-    image_width, image_height = image_dimensions
-    available_width, available_height = target_location
-
     # Calculate aspect ratio of the original image
     try:
-        aspect_ratio = image_width / image_height
+        aspect_ratio = image_dimensions.x / image_dimensions.y
     except ZeroDivisionError as e:
         raise ZeroDivisionError("Cannot calculate aspect ratio: Image height cannot be zero") from e
 
     # Calculate new dimensions while maintaining aspect ratio
-    if available_width / aspect_ratio <= available_height:
-        new_width = available_width
-        new_height = int(new_width / aspect_ratio)
+    if target_location.x / aspect_ratio <= target_location.y:
+        return Coordinate(target_location.x, int(target_location.x / aspect_ratio))
     else:
-        new_height = available_height
-        new_width = int(new_height * aspect_ratio)
-    return new_width, new_height
+        return Coordinate(int(target_location.y * aspect_ratio), target_location.y)

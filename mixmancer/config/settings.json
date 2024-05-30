@@ -1,17 +1,1 @@
-{
-    "projector_resolution": [
-        1200,
-        900
-    ],
-    "app_resolution": [
-        600,
-        400
-    ],
-    "display": 1,
-    "color": {
-        "white": "#ffffff",
-        "black": "#000000",
-        "grey": "#36393f",
-        "purple": "#7289da"
-    }
-}
+{"color": {"white": "#ffffff", "black": "#000000", "grey": "#36393f", "purple": "#7289da"}, "app_resolution": [500, 500], "projector_resolution": [1280, 900], "display": 1, "hexmap_offset": [12, 7], "hexmap_start": [45, 131], "hex_size": 56}

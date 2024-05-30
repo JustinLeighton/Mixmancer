@@ -8,10 +8,11 @@ data = {
     "d8": 0,
     "d10": 0,
     "d12": 0,
-    "d20": 1,
+    "d20": 5,
     "d100": 0,
     "modifier": 0,
     "advantage": True,
+    "disadvantage": False,
 }
 response = requests.post(url, json=data)
 print(response.json())

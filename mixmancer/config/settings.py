@@ -1,4 +1,5 @@
 import json
+from mixmancer.config.data_models import Coordinate
 
 
 class Settings:
@@ -15,28 +16,47 @@ class Settings:
         __init__(filename='default_settings.json'): Initializes the Settings object by loading settings from the specified JSON file.
     """
 
-    def __init__(self):
+    def __init__(self, path: str):
         self.color: dict[str, str] = {
             "white": "",
             "grey": "",
             "black": "",
             "purple": "",
         }
-        self.app_resolution: tuple[int, int] = (0, 0)
-        self.projector_resolution: tuple[int, int] = (0, 0)
-        self.display: int = 0
+        self.app_resolution: tuple[int, int] = (500, 500)
+        self.projector_resolution: tuple[int, int] = (1280, 900)
+        self.display: int = 1
+        self.hexmap_offset: tuple[int, int] = (0, 0)
+        self.hexmap_start: tuple[int, int] = (10, 5)
+        self.hex_size = 56
         try:
-            self.from_json("mixmancer/config/settings.json")
+            self.from_json(path)
         except FileNotFoundError:
             raise FileNotFoundError(f"Settings file 'mixmancer/config/settings.json' not found.")
 
-    def set_projector_resolution(self, resolution: tuple[int, int]):
-        """Set projector resolution tuple (width/height)"""
-        self.projector_resolution = resolution
+    def set_projector_resolution(self, resolution: Coordinate):
+        self.projector_resolution = resolution()
 
-    def set_app_resolution(self, resolution: tuple[int, int]):
-        """Set app resolution tuple (width/height)"""
-        self.app_resolution = resolution
+    def get_projector_resolution(self) -> Coordinate:
+        return Coordinate(*self.projector_resolution)
+
+    def set_app_resolution(self, height: int, width: int):
+        self.app_resolution = height, width
+
+    def get_app_resolution(self) -> Coordinate:
+        return Coordinate(*self.app_resolution)
+
+    def set_hexmap_offset(self, offset: Coordinate):
+        self.hexmap_offset = offset()
+
+    def get_hexmap_offset(self) -> Coordinate:
+        return Coordinate(*self.hexmap_offset)
+
+    def set_hexmap_start(self, start: Coordinate):
+        self.hexmap_start = start()
+
+    def get_hexmap_start(self) -> Coordinate:
+        return Coordinate(*self.hexmap_start)
 
     def to_json(self, filename: str):
         """Export settings to json"""

@@ -1,48 +1,181 @@
 import pygame
 import random
 from typing import Any
-import json
 import os
+import math
+from mixmancer.display.sprite import Spritesheet
+from mixmancer.config.data_models import Coordinate
 
 
 class Dice(pygame.sprite.Sprite):
-    def __init__(self, value: int, sheet_list: list[str], roll: int):
+    """
+    A sprite representing a dice with animated movement and rotation.
+
+    Attributes:
+        roll (int): The initial roll value of the dice.
+        bounds (tuple[int, int]): The boundaries within which the dice can move (width, height).
+        sprite_sheets (list[Spritesheet]): A list of spritesheets used for the dice's animation.
+        sheet_index (int): The current index of the spritesheet being used.
+        sprite_index (int): The current index of the sprite in the spritesheet being displayed.
+        last_sheet (int): The index of the last spritesheet in sprite_sheets.
+        end_flag (bool): Flag indicating whether the animation has ended.
+        wisp_flag (bool): Flag indicating whether a result wisp has spawned off the dice.
+        initial_velocity (pygame.Vector2): The initial velocity vector of the dice.
+        velocity (pygame.Vector2): The current velocity vector of the dice.
+        damping (float): Damping factor applied to the dice's velocity.
+        w (int): Width of the dice.
+        h (int): Height of the dice.
+        x (int): Current x position of the dice.
+        y (int): Current y position of the dice.
+        rect (pygame.Rect): The rectangle representing the dice's position and size.
+        rotation (int): The rotation angle of the dice.
+
+    Methods:
+        initialize_position() -> tuple[int, int]:
+            Initializes and returns a random valid position within the bounds.
+
+        check_valid_spawn(current_positions: list[tuple[int, int]]) -> bool:
+            Checks if the dice can be spawned at its current position without overlapping others.
+
+        load_spritesheets(sheet_list: list[str]) -> list[Spritesheet]:
+            Loads and returns the spritesheets from the given list of file paths.
+
+        update(*args: Any, dt: int, **kwargs: Any):
+            Updates the sprite's animation and movement based on the elapsed time (dt).
+    """
+
+    def __init__(
+        self,
+        sheet_list: list[str],
+        roll: int,
+        bounds: Coordinate,
+        other_dice: list[Coordinate],
+    ):
+        """
+        Initializes the Dice sprite.
+
+        Args:
+            sheet_list (list[str]): List of file paths to the sprite sheets.
+            roll (int): The roll value of the dice.
+            bounds (tuple[int, int]): The boundaries for the dice's movement (width, height).
+            other_dice (list[tuple[int, int]]): List of current positions of other dice to avoid overlap.
+        """
         super().__init__()
-        self.image = pygame.Surface([100, 100])
-        self.image.fill(pygame.color.Color(0, 255, 0))
-        self.rect = self.image.get_rect()
         self.roll = roll
+        self.bounds = bounds
         self.sprite_sheets = self.load_spritesheets(sheet_list)
         self.sheet_index, self.sprite_index = 0, 0
         self.last_sheet = len(sheet_list) - 1
         self.end_flag = False
-        # Direction? Velocity? Rotation? Speed slows?
+        self.wisp_flag = False
+        self.rotation = random.randint(0, 360)
+        self.initial_velocity = pygame.Vector2(random.randint(20, 60), random.randint(20, 60))
+        self.velocity = self.initial_velocity.copy()
+        self.damping = 1
+        self.w, self.h = 100, 100
+
+        # Initialize starting position, velocity, and direction
+        while True:  # Keep trying until valid
+            self.x, self.y = self.initialize_position()
+            self.rect = pygame.Rect(self.x, self.y, self.w, self.h)
+            if self.check_valid_spawn(self.rect, other_dice):
+                break
+
+    def initialize_position(self) -> tuple[int, int]:
+        """
+        Initializes a random position for the dice within the bounds.
+
+        Returns:
+            tuple[int, int]: A tuple containing the x and y coordinates of the initialized position.
+        """
+        if random.choices([True, False], weights=self.bounds()):
+            if random.choice([True, False]):
+                x, y = random.randint(0, self.bounds.x - self.w), 0
+            else:
+                x, y = random.randint(0, self.bounds.x - self.w), self.bounds.y - self.h
+        else:
+            if random.choice([True, False]):
+                x, y = 0, random.randint(0, self.bounds.y - self.h)
+            else:
+                x, y = self.bounds.x - self.w, random.randint(0, self.bounds.y - self.h)
+        return x, y
+
+    def check_valid_spawn(self, rect: pygame.Rect, other_dice: list[Coordinate]) -> bool:
+        """
+        Checks if the current position is valid and does not overlap with other dice.
+
+        Args:
+            other_dice (list[tuple[int, int]]): A list of tuples containing the positions of other dice.
+
+        Returns:
+            bool: True if the position is valid, False otherwise.
+        """
+        if other_dice:
+            for other in other_dice:
+                another_dice = pygame.Rect(other.x, other.y, rect.w, rect.h)
+                if rect.colliderect(another_dice):
+                    return False
+        return True
 
     def load_spritesheets(self, sheet_list: list[str]):
+        """
+        Loads the sprite sheets from the given list of file paths.
+
+        Args:
+            sheet_list (list[str]): List of file paths to the sprite sheets.
+
+        Returns:
+            list[Spritesheet]: A list of Spritesheet objects loaded from the file paths.
+        """
         sprite_sheets: list[Spritesheet] = []
         for sheet in sheet_list:
             sprite_sheets.append(Spritesheet(sheet))
         return sprite_sheets
 
-    def update(self, *args: Any, dt: int, **kwargs: Any):
+    def update_position(self):
+        """
+        Updates the position of the dice based on its current velocity and checks for boundary collisions.
+
+        The position is adjusted by the current velocity, and the velocity is inverted if the dice hits the bounds.
+        The velocity decays over time based on the progress of the animation.
+        """
+        if self.sheet_index != self.last_sheet:
+
+            self.x += self.velocity.x
+            self.y += self.velocity.y
+
+            if self.x + self.w + self.velocity.x > self.bounds.x or self.x + self.velocity.x < 0:
+                self.velocity.x = -self.velocity.x
+            elif self.y + self.h + self.velocity.y > self.bounds.y or self.y + self.velocity.y < 0:
+                self.velocity.y = -self.velocity.y
+
+            decay_factor = 1 - (self.sprite_index / self.sprite_sheets[self.sheet_index].get_frame_count())
+
+            self.velocity = pygame.Vector2(
+                math.copysign(1, self.velocity.x) * self.initial_velocity.x * decay_factor,
+                math.copysign(1, self.velocity.y) * self.initial_velocity.y * decay_factor,
+            )
+
+            self.rect = pygame.Rect(self.x, self.y, self.w, self.h)
+
+    def update(self, *args: Any, **kwargs: Any):
+        """Updates the sprite's animation and movement."""
         if not self.end_flag:
             self.image, next_sheet = self.sprite_sheets[self.sheet_index].get_sprite(str(self.sprite_index))
+            self.image = pygame.transform.scale(self.image, (self.w, self.h))
             if next_sheet:
                 if self.sheet_index != self.last_sheet:
+                    self.image = pygame.transform.rotate(self.image, angle=self.rotation)
                     self.sheet_index += 1
                     self.sprite_index = 0
                 else:
                     self.end_flag = True
             else:
                 self.sprite_index += 1
-
-        if self.sheet_index != self.last_sheet:
-            # Movement
-            self.rect.x += 10
-            self.rect.y += 10
+        self.update_position()
 
 
-def generate_dice(dice: str) -> Dice:
+def generate_dice(dice: str, bounds: Coordinate, current_positions: list[Coordinate]) -> Dice:
     """
     Generates a dice object with the specified number of sides.
 
@@ -73,76 +206,4 @@ def generate_dice(dice: str) -> Dice:
         raise KeyError(f"Dice with {val} sides not found in the sprite_sheets dictionary.")
 
     sheet_paths = [os.path.join(sprite_path, sheet) for sheet in sprite_sheets[val]]
-    return Dice(val, sheet_paths, roll)
-
-
-class Spritesheet:
-    """
-    A class to handle loading and extracting sprites from a spritesheet image.
-
-    Attributes:
-        filename (str): The filename of the spritesheet image.
-        metadata (str): The filename of the associated metadata file.
-        sprite_sheet (pygame.Surface): The spritesheet image loaded into Pygame surface.
-        data (dict): The metadata loaded from the associated JSON file.
-        height (int): The height of each sprite frame.
-        width (int): The width of each sprite frame.
-    """
-
-    def __init__(self, filename: str):
-        """
-        Initializes the Spritesheet object with the given filename.
-
-        Parameters:
-            filename (str): The filename of the spritesheet image.
-        """
-        self.filename = filename
-        self.metadata = self.filename.replace("png", "json")
-        self.sprite_sheet = pygame.image.load(filename).convert()
-        self.data = self.load_metadata()
-        self.height, self.width = self.data["dimensions"]["height"], self.data["dimensions"]["width"]
-        self.total_frames = len(self.data["frames"]) - 1
-
-    def load_metadata(self) -> dict[str, Any]:
-        """
-        Loads the metadata from the associated JSON file.
-
-        Returns:
-            dict: The metadata loaded from the JSON file.
-        """
-        with open(self.metadata) as f:
-            data = json.load(f)
-        return data
-
-    def get_frame(self, x: int, y: int, w: int, h: int) -> pygame.Surface:
-        """
-        Extracts a single sprite frame from the spritesheet.
-
-        Parameters:
-            x (int): The x-coordinate of the top-left corner of the frame.
-            y (int): The y-coordinate of the top-left corner of the frame.
-            w (int): The width of the frame.
-            h (int): The height of the frame.
-
-        Returns:
-            pygame.Surface: The extracted sprite frame as a Pygame surface.
-        """
-        sprite = pygame.Surface((w, h))
-        sprite.set_colorkey((0, 0, 0))
-        sprite.blit(self.sprite_sheet, (0, 0), (x, y, w, h))
-        return sprite
-
-    def get_sprite(self, frame: str) -> tuple[pygame.Surface, bool]:
-        """
-        Retrieves a sprite frame by its name from the spritesheet.
-
-        Parameters:
-            frame (str): The name of the frame as specified in the metadata.
-
-        Returns:
-            tuple: A tuple containing the sprite frame corresponding to the given name
-                and a boolean indicating if it's the last frame.
-        """
-        x, y = self.data["frames"][frame]["x"], self.data["frames"][frame]["y"]
-        image = self.get_frame(x, y, self.width, self.height)
-        return image, str(self.total_frames) == frame
+    return Dice(sheet_paths, roll, bounds, current_positions)

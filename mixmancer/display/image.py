@@ -2,8 +2,10 @@ import pygame
 from PIL import Image
 import os
 from typing import Any
-from mixmancer.display.dice import generate_dice
-from mixmancer.config.schema import DataModel
+from mixmancer.display.dice import generate_dice, Dice
+from mixmancer.display.effects import ResultWisp
+from mixmancer.config.data_models import DataModel, Coordinate
+from mixmancer.config.parameters import FRAME_RATE
 
 
 class ImageProjector:
@@ -17,7 +19,7 @@ class ImageProjector:
         image (pygame.Surface): A Pygame Surface object representing the loaded image.
     """
 
-    def __init__(self, resolution: tuple[int, int], display: int):
+    def __init__(self, resolution: Coordinate, display: int):
         """
         Initializes the ImageProjector object with the given resolution and display.
 
@@ -26,53 +28,89 @@ class ImageProjector:
             display (int): An integer representing the display number.
         """
         self.resolution = resolution
-        self.screen = pygame.display.set_mode(resolution, flags=pygame.NOFRAME, display=display)
+        self.display = display
+        self.screen = pygame.display.set_mode(self.resolution(), flags=pygame.NOFRAME, display=self.display)
         self.status: bool = False
-        self.image: pygame.Surface = pygame.Surface((self.resolution[0], self.resolution[1]))
+        self.image: pygame.Surface = pygame.Surface(self.resolution())
         self.current_image: str = ""
         self.dice_group: pygame.sprite.Group[Any] = pygame.sprite.Group()
-        self.spawn_dice(d20=1)
+        self.wisp_group: pygame.sprite.Group[Any] = pygame.sprite.Group()
+        self.sprite_groups = [self.dice_group, self.wisp_group]
+        self.dice_timer: int = 0
+        self.dice_expiration: int = 10 * FRAME_RATE
 
-    def spawn_dice(self, **kwargs: int) -> None:
+    def spawn_wisp(self, dice: Dice):
+        if dice.end_flag and not dice.wisp_flag:
+            dice.wisp_flag = True
+            self.wisp_group.add(ResultWisp((dice.rect.x, dice.rect.y), self.resolution.half()))
+
+    def spawn_dice(self, **kwargs: int):
         """
         Spawn dice objects for a die-roll from hedgebot.
 
         Parameters:
             **kwargs (int): Keyword arguments representing the count of each type of dice to add.
                 Supported dice types: 'd4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100'.
-
-        Returns:
-            None
         """
         self.clear_dice()
+        self.dice_timer = 1
         results: list[int] = []
         for dice in ["d4", "d6", "d8", "d10", "d12", "d20", "d100"]:
             if dice in kwargs.keys():
                 for _ in range(kwargs[dice]):
-                    new_dice = generate_dice(dice)
+                    current_pos = [Coordinate(d.rect.x, d.rect.y) for d in self.dice_group]
+                    new_dice = generate_dice(dice, self.resolution, current_pos)
                     self.dice_group.add(new_dice)
                     results.append(new_dice.roll)
         modifier = kwargs.get("modifier", 0)
         if kwargs.get("advantage", False):
             output = max(results) + modifier
+        elif kwargs.get("disadvantage", False):
+            output = min(results) + modifier
         else:
             output = sum(results) + modifier
-        print(results)
-        print(output)
+        print("Roll result:", output)
 
-    def update_dice(self, dt: int):
+    def update_dice(self):
         """
         Updates the state of all dice objects in the dice group.
 
         Parameters:
             dt (int): The time elapsed since the last update, in milliseconds.
         """
-        self.dice_group.update(dt=dt)
+        if self.dice_timer:
+            self.dice_timer += 1
+            # print("Roll timer:", self.dice_expiration - self.dice_timer)
+            if self.dice_timer > self.dice_expiration:
+                self.clear_dice()
+            else:
+                self.check_collisions()
+                for group in self.sprite_groups:
+                    group.update()
+
+    def draw_dice(self):
+        for group in self.sprite_groups:
+            group.draw(self.screen)
+
+    def check_collisions(self):
+        collisions = pygame.sprite.groupcollide(self.dice_group, self.dice_group, False, False)
+        collision_tracking: list[Any] = []
+        for dice1, dice2_list in collisions.items():
+            collision_tracking.append(dice1)
+            self.spawn_wisp(dice1)
+            for dice2 in dice2_list:
+                if dice2 not in collision_tracking:
+                    if abs(dice1.rect.centerx - dice2.rect.centerx) > abs(dice1.rect.centery - dice2.rect.centery):
+                        dice1.velocity.x, dice2.velocity.x = -dice1.velocity.x, -dice2.velocity.x
+                    else:
+                        dice1.velocity.y, dice2.velocity.y = -dice1.velocity.y, -dice2.velocity.y
 
     def clear_dice(self):
         """Removes all dice objects from the dice group, effectively clearing the screen of dice"""
-        for die in self.dice_group:
-            die.kill()
+        self.dice_timer = -1
+        for group in self.sprite_groups:
+            for sprite in group:
+                sprite.kill()
 
     def process_data(self, data: list[Any]):
         """
@@ -136,10 +174,16 @@ class ImageProjector:
         image_pil = Image.frombytes("RGBA", self.image.get_size(), bytes_data)  # type: ignore[reportUnknownMemberType]
         return image_pil
 
+    def update_resolution(self, resolution: Coordinate):
+        """Updates the screen resolution."""
+        self.resolution = resolution
+        os.environ["SDL_VIDEO_CENTERED"] = "1"
+        self.screen = pygame.display.set_mode(self.resolution(), flags=pygame.NOFRAME, display=self.display)
+
     def blit(self):
         """Blits the loaded image onto the screen. Auto-sizes image depending on screen resolution."""
         self.screen.fill((0, 0, 0))
-        sw, sh = self.resolution
+        sw, sh = self.resolution()
         iw, ih = self.image.get_width(), self.image.get_height()
         if iw / ih > sw / sh:
             t = sw / iw
@@ -147,10 +191,10 @@ class ImageProjector:
             t = sh / ih
         self.image = pygame.transform.scale(self.image, (t * iw, t * ih))
         self.screen.blit(self.image, ((sw - t * iw) / 2, (sh - t * ih) / 2))
-        self.dice_group.draw(self.screen)
+        self.draw_dice()
 
     def update(self):
         """Update pygame display"""
-        self.update_dice(0)
+        self.update_dice()
         self.blit()
         pygame.display.update()

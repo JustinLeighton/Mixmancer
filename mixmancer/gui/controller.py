@@ -16,18 +16,27 @@ class Controller(tk.Tk):
     def __init__(self):
         super().__init__()
         self.configure_theme()
-        self.settings = Settings()
+        self.settings_path = "mixmancer/config/settings.json"
+        self.hexmap_path = "assets/map/map.png"
+
+        self.settings = Settings(self.settings_path)
         self.container = ttk.Frame(self, style="Custom.TFrame")
         self.container.pack(fill=tk.BOTH, expand=True)
         self.frames: dict[type[ttk.Frame], ttk.Frame] = {}
         self.active_frame: type[ttk.Frame]
-        self.image_projector = ImageProjector(self.settings.projector_resolution, 1)
-        self.hexmap = HexMap("assets/map/tmp.png", self.settings.projector_resolution, 56, (-2, -6), (43, 131))
+        self.image_projector = ImageProjector(self.settings.get_projector_resolution(), 1)
+        self.hexmap = HexMap(
+            image_path=self.hexmap_path,
+            resolution=self.settings.get_projector_resolution(),
+            hex_size=self.settings.hex_size,
+            offset=self.settings.get_hexmap_offset(),
+            start_coordinates=self.settings.get_hexmap_start(),
+        )
         self.image_preview: ImageTk.PhotoImage = None  # type: ignore[reportAttributeAccessIssue]
         self.sfx_volume: float = 0.5
         self.mixer = Mixer()
         self.hexmap_flag = False
-        self.theme = CustomTheme()
+        self.theme = CustomTheme(self.settings)
         self.image_thumbnail_dimensions: tuple[int, int] = (100, 100)
 
     def show_frame(self, container: type[ttk.Frame]):
@@ -79,6 +88,18 @@ class Controller(tk.Tk):
         """Route hexmap object commands"""
         self.hexmap.command(command)
         self.display_hexmap()
+
+    def update_settings(self, settings: Settings):
+        self.settings = settings
+        settings.to_json(self.settings_path)
+        self.image_projector.update_resolution(self.settings.get_projector_resolution())
+        self.hexmap.update_parameters(
+            self.settings.hex_size,
+            self.settings.get_hexmap_offset(),
+            self.settings.get_hexmap_start(),
+        )
+        if self.hexmap_flag:
+            self.display_hexmap()
 
     def process_data(self, data: list[Any]):
         self.image_projector.process_data(data)

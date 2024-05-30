@@ -4,7 +4,7 @@ import uvicorn
 from typing import Any
 import socket
 
-from mixmancer.config.schema import DataModel
+from mixmancer.config.data_models import DataModel
 
 app = FastAPI()
 data_queue: queue.Queue[Any] = queue.Queue()
