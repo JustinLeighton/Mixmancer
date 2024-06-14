@@ -1,7 +1,11 @@
 import pygame
 import math
 from PIL import Image
+from numpy import arange, linspace, float_
+from numpy.typing import NDArray
 from mixmancer.config.data_models import Coordinate
+
+from scipy import interpolate  # type: ignore[reportMissingTypeStubs]
 
 
 class HexMap:
@@ -44,11 +48,14 @@ class HexMap:
         self.resolution = resolution
         self.location_pixel: Coordinate
         self.stagger: bool
-        self.update_parameters(hex_size, offset, start_coordinates)
         self.fog_flag = False
         self.history_flag = False
         self.yellow = (255, 215, 0)
         self.history_file: str = "./assets/map/history.txt"
+        data = self.read_history(self.history_file)
+        if data:
+            start_coordinates = data[-1]
+        self.update_parameters(hex_size, offset, start_coordinates)
 
     def update_parameters(self, hex_size: int, offset: Coordinate, location_grid: Coordinate):
         self.hex_size = hex_size
@@ -61,15 +68,6 @@ class HexMap:
         """Update pixel location and stagger bool according to the player location on the map."""
         self.stagger = self.check_stagger(self.location_grid)
         self.location_pixel = self.grid_to_pixel(self.location_grid)
-        print(
-            f"""
-            location_grid: {self.location_grid}
-            location_pixel: {self.location_pixel} 
-            stagger: {self.stagger}
-            hex_size: {self.hex_size}
-            side_length: {self.side_length}
-            """
-        )
 
     def check_stagger(self, grid_location: Coordinate) -> bool:
         """Check if current location is on a staggered hex row or not.
@@ -101,9 +99,12 @@ class HexMap:
         Returns:
             Coordinate: The pixel coordinates (x, y).
         """
-        x = int(grid_location.x * self.hex_size * 2 + self.offset.x)
-        y = int(grid_location.y * self.side_length * 2 + self.offset.y)
-        # int(grid_location.y * self.side_length * 1.5 + self.offset.y)
+        y = 2 * int(grid_location.y * self.side_length * 1.5 + self.offset.y)
+        x = 2 * int(
+            grid_location.x * self.hex_size
+            + self.offset.x
+            - (not self.check_stagger(grid_location)) * 0.5 * self.hex_size
+        )
         return Coordinate(x, y)
 
     def hex_points(self):
@@ -129,15 +130,8 @@ class HexMap:
         Returns:
             bool: True if on screen, False otherwise.
         """
-
-        # Use pygame rect collide
-        # for i in (0, 1):
-        #     if (
-        #         pixel_coordinates[i] > self.location_pixel[i] + self.resolution[::-1][i] / 2
-        #         or pixel_coordinates[i] < self.location_pixel[i] - self.resolution[::-1][i] / 2
-        #     ):
-        #         return False
-        return True
+        screen = pygame.Rect(*(self.location_pixel - self.resolution.divide(2))(), *self.resolution())
+        return pygame.Rect(pixel_coordinates()).colliderect(screen)
 
     def normalize_pixel_location(self, pixel_coordinates: Coordinate) -> Coordinate:
         """Normalize pixel coordinates given a screen frame centered on the player's frame of reference.
@@ -150,19 +144,6 @@ class HexMap:
         """
         return (pixel_coordinates - self.location_pixel + self.resolution).divide(2)
 
-    def get_history(self) -> list[Coordinate]:
-        """Get a list of historical grid points and convert to pixel coordinates.
-
-        Returns:
-            list[Coordinate]: List of historical pixel coordinates.
-        """
-        output: list[Coordinate] = []
-        for grid_coordinate in self.read_history(self.history_file):
-            pixel_coordinate = self.grid_to_pixel(grid_coordinate)
-            if self.check_on_screen(pixel_coordinate):
-                output.append(pixel_coordinate)
-        return output
-
     def read_history(self, file_location: str) -> list[Coordinate]:
         """Read historical grid coordinates from file.
 
@@ -173,8 +154,8 @@ class HexMap:
             data: list[Coordinate] = []
             for line in file:
                 try:
-                    y, x = map(int, line.strip().split(","))
-                    data.append(Coordinate(y, x))
+                    x, y = map(int, line.strip().split(","))
+                    data.append(Coordinate(x, y))
                 except ValueError as e:
                     raise ValueError(f"Error converting line '{line.strip()}' to int: {e}")
         return data
@@ -185,13 +166,13 @@ class HexMap:
         data = data[:-1]
         self.location_grid = data[len(data) - 1]
         with open(self.history_file, "w") as f:
-            f.writelines(",".join(map(str, x)) + "\n" for x in data)
+            f.writelines(",".join(map(str, x())) + "\n" for x in data)
         self.update()
 
     def log_movement(self):
         """Log the last movement in the history file."""
         with open(self.history_file, "a") as f:
-            f.write(f"{','.join([str(x) for x in self.location_grid])}\n")
+            f.write(f"{','.join([str(x) for x in self.location_grid()])}\n")
 
     def get_direction_mapping(self):
         """Translate direction into grid point coordinates with respect to the staggered grid layout."""
@@ -208,6 +189,7 @@ class HexMap:
     def toggle_history_flag(self):
         """Toggle the history flag. This allows the user to enable or disable lines showing historical movement across the map - UNFINISHED"""
         self.history_flag = not self.history_flag
+        self.update()
 
     def toggle_fog_flag(self):
         """Toggle the fog flag. This allows the user to enable or disable fog to obscure unexplored areas of the map. - UNFINISHED"""
@@ -220,6 +202,7 @@ class HexMap:
             direction (Coordinate): The direction to move (x, y) in grid coordinate.
         """
         self.location_grid += direction
+        self.log_movement()
 
     def command(self, command: str):
         """Execute a command. This routes all possible inputs from the tkinter widgets to the HexMap object.
@@ -252,6 +235,19 @@ class HexMap:
 
         # Draw current location
         pygame.draw.polygon(surface, color=self.yellow, points=self.hex_points(), width=3)
+
+        # Draw history
+        if self.history_flag:
+            data = self.read_history(self.history_file)
+            normalized_points = [self.normalize_pixel_location(self.grid_to_pixel(pt)).float() for pt in data]
+            x = [pt[0] for pt in normalized_points]
+            y = [pt[1] for pt in normalized_points]
+            draw_spline_curve(surface, self.yellow, x, y)
+
+        # Draw fog
+        if self.fog_flag:
+            pass
+
         return surface
 
     def get_current_surface_PIL(self) -> Image.Image:
@@ -267,3 +263,27 @@ class HexMap:
         surface = self.get_current_surface()
         pygame.image.save(surface, temp_file)
         return temp_file
+
+
+def interpolate_curve(
+    x: list[float], y: list[float], num_points: int = 1000
+) -> tuple[NDArray[float_], NDArray[float_]]:
+    spline_x = interpolate.UnivariateSpline(arange(len(x)), x, s=0)
+    spline_y = interpolate.UnivariateSpline(arange(len(y)), y, s=0)
+    u = linspace(0, len(x) - 1, num_points)
+    xi = spline_x(u)  # type: ignore
+    yi = spline_y(u)  # type: ignore
+    return xi, yi  # type: ignore
+
+
+def draw_spline_curve(
+    surface: pygame.Surface,
+    color: tuple[int, int, int],
+    x: list[float],
+    y: list[float],
+    num_points: int = 1000,
+    width: int = 2,
+) -> None:
+    xi, yi = interpolate_curve(x, y, num_points)
+    points = list(zip(xi, yi))
+    pygame.draw.lines(surface, color, False, points, width)

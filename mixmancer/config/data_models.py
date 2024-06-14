@@ -41,6 +41,9 @@ class Coordinate(BaseModel):
             raise ValueError("Cannot divide by zero")
         return Coordinate(x=int(self.x / constant), y=int(self.y / constant))
 
+    def float(self) -> tuple[float, float]:
+        return (float(self.x), float(self.y))
+
     def half(self) -> Tuple[int, int]:
         return (self.x // 2, self.y // 2)
 

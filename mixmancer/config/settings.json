@@ -1,1 +1,26 @@
-{"color": {"white": "#ffffff", "black": "#000000", "grey": "#36393f", "purple": "#7289da"}, "app_resolution": [500, 500], "projector_resolution": [1280, 900], "display": 1, "hexmap_offset": [12, 7], "hexmap_start": [45, 131], "hex_size": 56}
+{
+    "color": {
+        "white": "#ffffff",
+        "black": "#000000",
+        "grey": "#36393f",
+        "purple": "#7289da"
+    },
+    "app_resolution": [
+        500,
+        500
+    ],
+    "projector_resolution": [
+        1280,
+        900
+    ],
+    "display": 1,
+    "hexmap_offset": [
+        8,
+        85
+    ],
+    "hexmap_start": [
+        143,
+        18
+    ],
+    "hex_size": 56
+}
