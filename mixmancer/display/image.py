@@ -3,7 +3,7 @@ from PIL import Image
 import os
 from typing import Any
 from mixmancer.display.dice import generate_dice, Dice
-from mixmancer.display.effects import ResultWisp, TextSprite
+from mixmancer.display.effects import TextSprite  # , ResultWisp
 from mixmancer.config.data_models import DataModel, Coordinate
 from mixmancer.config.parameters import FRAME_RATE
 
@@ -44,7 +44,7 @@ class ImageProjector:
     def spawn_wisp(self, dice: Dice):
         if dice.end_flag and not dice.wisp_flag:
             dice.wisp_flag = True
-            self.wisp_group.add(ResultWisp((dice.rect.x, dice.rect.y), self.resolution.half()))
+            # self.wisp_group.add(ResultWisp((dice.rect.x, dice.rect.y), self.resolution.half()))
             self.text_group.add(TextSprite(str(self.dice_result), self.resolution.half()))
 
     def spawn_dice(self, **kwargs: int):

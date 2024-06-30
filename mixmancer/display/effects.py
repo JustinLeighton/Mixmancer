@@ -3,6 +3,7 @@ import random
 from typing import Any
 
 from mixmancer.display.sprite import Spritesheet
+from mixmancer.display.utils import resize_image_with_aspect_ratio
 
 
 class ResultWisp(pygame.sprite.Sprite):
@@ -42,8 +43,8 @@ class ResultWisp(pygame.sprite.Sprite):
                 self.sprite_index += 1
             self.update_position()
         else:
-            # self.image = pygame.Surface((self.w, self.h))
-            # self.image.fill((255, 0, 0))
+            self.image = pygame.Surface((self.w, self.h), pygame.SRCALPHA)
+            self.image.fill((255, 0, 0))
             self.end_flag = True
 
 
@@ -55,8 +56,8 @@ class TextSprite(pygame.sprite.Sprite):
         font_name: str = "Arial",
         font_size: int = 30,
         color: tuple[int, int, int] = (255, 255, 255),
-        backdrop: bool = False,
-        backdrop_image_path: str = "result_backdrop.png",
+        backdrop: bool = True,
+        backdrop_image_path: str = "assets/dice/result_backdrop.png",
     ):
         super().__init__()
         self.text = text
@@ -71,8 +72,11 @@ class TextSprite(pygame.sprite.Sprite):
         self.backdrop_image: pygame.Surface
         if self.backdrop:
             self.backdrop_image = pygame.image.load(self.backdrop_image_path).convert_alpha()
+            self.backdrop_image = resize_image_with_aspect_ratio(self.backdrop_image, width=200)
         else:
             self.backdrop_image = pygame.Surface((0, 0), pygame.SRCALPHA)
+
+        self.update()
 
     def update(self, *args: Any, **kwargs: Any):
 
@@ -81,7 +85,7 @@ class TextSprite(pygame.sprite.Sprite):
 
         if self.backdrop:
             self.image = pygame.Surface(self.backdrop_image.get_size(), pygame.SRCALPHA)
-            self.image.blit(self.backdrop_image, (0, 0))
+            self.image.blit(self.backdrop_image, (0, 5))
             text_surface = self.font.render(self.text, True, self.color)
             text_rect = text_surface.get_rect(center=self.backdrop_image.get_rect().center)
             self.image.blit(text_surface, text_rect)
