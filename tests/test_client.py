@@ -1,6 +1,6 @@
 import requests
 
-url = "http://192.168.0.107:8000/send-data"
+url = "http://10.2.0.2:8000/send-data"
 
 data = {
     "d4": 0,
@@ -8,7 +8,7 @@ data = {
     "d8": 0,
     "d10": 0,
     "d12": 0,
-    "d20": 5,
+    "d20": 2,
     "d100": 0,
     "modifier": 0,
     "advantage": True,

@@ -42,6 +42,52 @@ class ResultWisp(pygame.sprite.Sprite):
                 self.sprite_index += 1
             self.update_position()
         else:
-            self.image = pygame.Surface((self.w, self.h))
-            self.image.fill((255, 0, 0))
+            # self.image = pygame.Surface((self.w, self.h))
+            # self.image.fill((255, 0, 0))
             self.end_flag = True
+
+
+class TextSprite(pygame.sprite.Sprite):
+    def __init__(
+        self,
+        text: str,
+        location: tuple[int, int],
+        font_name: str = "Arial",
+        font_size: int = 30,
+        color: tuple[int, int, int] = (255, 255, 255),
+        backdrop: bool = False,
+        backdrop_image_path: str = "result_backdrop.png",
+    ):
+        super().__init__()
+        self.text = text
+        self.location = location
+        self.font_name = font_name
+        self.font_size = font_size
+        self.color = color
+        self.font = pygame.font.SysFont(self.font_name, self.font_size)
+        self.backdrop = backdrop
+        self.backdrop_image_path = backdrop_image_path
+
+        self.backdrop_image: pygame.Surface
+        if self.backdrop:
+            self.backdrop_image = pygame.image.load(self.backdrop_image_path).convert_alpha()
+        else:
+            self.backdrop_image = pygame.Surface((0, 0), pygame.SRCALPHA)
+
+    def update(self, *args: Any, **kwargs: Any):
+
+        self.image = self.font.render(self.text, True, self.color)
+        self.rect = self.image.get_rect(center=self.location)
+
+        if self.backdrop:
+            self.image = pygame.Surface(self.backdrop_image.get_size(), pygame.SRCALPHA)
+            self.image.blit(self.backdrop_image, (0, 0))
+            text_surface = self.font.render(self.text, True, self.color)
+            text_rect = text_surface.get_rect(center=self.backdrop_image.get_rect().center)
+            self.image.blit(text_surface, text_rect)
+        else:
+            text_surface = self.font.render(self.text, True, self.color)
+            self.image = pygame.Surface(text_surface.get_size(), pygame.SRCALPHA)
+            self.image.blit(text_surface, (0, 0))
+
+        self.rect = self.image.get_rect(center=self.location)

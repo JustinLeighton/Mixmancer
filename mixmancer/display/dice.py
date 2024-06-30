@@ -199,7 +199,13 @@ def generate_dice(dice: str, bounds: Coordinate, current_positions: list[Coordin
     roll = random.randint(1, val)
     sprite_path = "assets/dice"
     sprite_sheets = {
+        4: ["d20/single_roll.png", f"d20/d20_{roll}.png"],
+        6: ["d20/single_roll.png", f"d20/d20_{roll}.png"],
+        8: ["d20/single_roll.png", f"d20/d20_{roll}.png"],
+        10: ["d20/single_roll.png", f"d20/d20_{roll}.png"],
+        12: ["d20/single_roll.png", f"d20/d20_{roll}.png"],
         20: ["d20/single_roll.png", f"d20/d20_{roll}.png"],
+        # 100: ["d20/single_roll.png", f"d20/d20_{roll}.png"],
     }
 
     if val not in sprite_sheets:

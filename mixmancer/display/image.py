@@ -3,7 +3,7 @@ from PIL import Image
 import os
 from typing import Any
 from mixmancer.display.dice import generate_dice, Dice
-from mixmancer.display.effects import ResultWisp
+from mixmancer.display.effects import ResultWisp, TextSprite
 from mixmancer.config.data_models import DataModel, Coordinate
 from mixmancer.config.parameters import FRAME_RATE
 
@@ -35,14 +35,17 @@ class ImageProjector:
         self.current_image: str = ""
         self.dice_group: pygame.sprite.Group[Any] = pygame.sprite.Group()
         self.wisp_group: pygame.sprite.Group[Any] = pygame.sprite.Group()
-        self.sprite_groups = [self.dice_group, self.wisp_group]
+        self.text_group: pygame.sprite.Group[Any] = pygame.sprite.Group()
+        self.sprite_groups = [self.dice_group, self.wisp_group, self.text_group]
         self.dice_timer: int = 0
+        self.dice_result: int = 0
         self.dice_expiration: int = 10 * FRAME_RATE
 
     def spawn_wisp(self, dice: Dice):
         if dice.end_flag and not dice.wisp_flag:
             dice.wisp_flag = True
             self.wisp_group.add(ResultWisp((dice.rect.x, dice.rect.y), self.resolution.half()))
+            self.text_group.add(TextSprite(str(self.dice_result), self.resolution.half()))
 
     def spawn_dice(self, **kwargs: int):
         """
@@ -64,12 +67,12 @@ class ImageProjector:
                     results.append(new_dice.roll)
         modifier = kwargs.get("modifier", 0)
         if kwargs.get("advantage", False):
-            output = max(results) + modifier
+            self.dice_result = max(results) + modifier
         elif kwargs.get("disadvantage", False):
-            output = min(results) + modifier
+            self.dice_result = min(results) + modifier
         else:
-            output = sum(results) + modifier
-        print("Roll result:", output)
+            self.dice_result = sum(results) + modifier
+        print("Roll result:", self.dice_result)
 
     def update_dice(self):
         """
