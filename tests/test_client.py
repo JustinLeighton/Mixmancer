@@ -11,8 +11,8 @@ data = {
     "d20": 2,
     "d100": 0,
     "modifier": 0,
-    "advantage": True,
-    "disadvantage": False,
+    "advantage": False,
+    "disadvantage": True,
 }
 response = requests.post(url, json=data)
 print(response.json())

@@ -12,6 +12,7 @@ class DataModel(BaseModel):
     d100: int
     modifier: int
     advantage: bool
+    disadvantage: bool
 
 
 class Coordinate(BaseModel):
