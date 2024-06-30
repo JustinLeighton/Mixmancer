@@ -5,8 +5,10 @@ Created on Thu May 18 23:31:42 2023
 @author: Justin Leighton
 """
 
-import pygame
 import threading
+import argparse
+
+import pygame
 
 from mixmancer.gui.frames import Controller, StartFrame, MenuBar, get_frames
 from mixmancer.api.api import start_fastapi, data_queue
@@ -41,9 +43,14 @@ class App(Controller):
 
 
 if __name__ == "__main__":
-    thread = threading.Thread(target=start_fastapi)
-    thread.daemon = True
-    thread.start()
+    parser = argparse.ArgumentParser(description="Run the app with or without API thread.")
+    parser.add_argument("-local", action="store_true", help="Run the app without API thread")
+    args = parser.parse_args()
+
+    if not args.local:
+        thread = threading.Thread(target=start_fastapi)
+        thread.daemon = True
+        thread.start()
 
     app = App()
     while True:
