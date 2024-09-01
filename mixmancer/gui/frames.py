@@ -1,9 +1,10 @@
-import tkinter as tk
-from tkinter import ttk
 import os
 from PIL import Image, ImageTk
-
+from pathlib import Path
 from typing import Literal, Union, Any, Callable
+
+import tkinter as tk
+from tkinter import ttk
 
 from mixmancer.gui.controller import Controller
 from mixmancer.gui.theme import CustomButton, CustomImage, CustomSlider, CustomLabel, SquareButton
@@ -16,6 +17,10 @@ from mixmancer.config.settings import (
     get_hexmap_start,
     get_projector_display,
     set_env_variable,
+    get_image_path,
+    get_music_path,
+    get_sfx_path,
+    get_hexmap_path,
 )
 from mixmancer.config.data_models import Coordinate
 
@@ -129,7 +134,7 @@ class StartFrame(ttk.Frame):
 
 
 class ImageFrame(ttk.Frame):
-    """Display .jpg/.jpeg/.png files in assets/img for selection"""
+    """Display .jpg/.jpeg/.png files for selection"""
 
     def __init__(self, parent: ttk.Frame, controller: Controller):
         ttk.Frame.__init__(self, parent, style="Custom.TFrame")
@@ -156,11 +161,11 @@ class ImageFrame(ttk.Frame):
         # Create a frame inside the canvas to hold the images
         self.inner_frame = ttk.Frame(self.canvas)
         self.canvas.create_window((0, 0), window=self.inner_frame, anchor="nw")
-        self.display_image_thumbnails("assets/img")
+        self.display_image_thumbnails(get_image_path())
         self.bind("<Configure>", self.on_configure)  # type: ignore
 
-    def display_image_thumbnails(self, img_dir: str):
-        """Displays images found in assets/img in a grid layout for selection"""
+    def display_image_thumbnails(self, img_dir: Path):
+        """Displays images in a grid layout for selection"""
 
         # Check if the directory exists
         if not os.path.exists(img_dir):
@@ -226,7 +231,7 @@ class SearchableFrame(ttk.Frame):
         self,
         parent: ttk.Frame,
         controller: Controller,
-        file_directory: str,
+        file_directory: Path,
         extension: str,
         callback: Callable[..., Any],
     ):
@@ -271,14 +276,14 @@ class SearchableFrame(ttk.Frame):
 
 
 class MusicFrame(SearchableFrame):
-    """Display .mp3 files in assets/music for selection"""
+    """Display .mp3 files for selection"""
 
     def __init__(self, parent: ttk.Frame, controller: Controller):
         SearchableFrame.__init__(
             self,
             parent,
             controller,
-            file_directory="assets/music",
+            file_directory=get_music_path(),
             extension=".mp3",
             callback=controller.mixer.play_music,
         )
@@ -292,7 +297,7 @@ class SfxFrame(SearchableFrame):
             self,
             parent,
             controller,
-            file_directory="assets/sfx",
+            file_directory=get_sfx_path(),
             extension=".wav",
             callback=controller.mixer.play_sfx,
         )
@@ -367,6 +372,13 @@ class SettingsFrame(ttk.Frame):
         self.resolution = CoordinateEntry(self, "Resolution", get_projector_resolution()())
         self.display = CoordinateEntry(self, "Display", tuple([get_projector_display()]))
 
+        # Paths
+        ttk.Label(self, text="\nPaths").pack(anchor="w")
+        self.image_file_path = self.create_path_entry("Image Path", get_image_path())
+        self.music_file_path = self.create_path_entry("Music Path", get_music_path())
+        self.sfx_file_path = self.create_path_entry("SFX Path", get_sfx_path())
+        self.hexmap_file_path = self.create_path_entry("Hexmap Path", get_hexmap_path())
+
         # Hexmap
         ttk.Label(self, text="\nHexmap").pack(anchor="w")
         self.hexmap_size = CoordinateEntry(self, "Hex Size", tuple([get_hexmap_size()]))
@@ -384,9 +396,13 @@ class SettingsFrame(ttk.Frame):
         data: dict[str, Any] = {
             "PROJECTOR_RESOLUTION": Coordinate(*self.resolution.get()),
             "PROJECTOR_DISPLAY": self.display.get()[0],
+            "IMAGE_PATH": self.image_file_path.get(),
+            "MUSIC_PATH": self.music_file_path.get(),
+            "SFX_PATH": self.sfx_file_path.get(),
+            "HEXMAP_PATH": self.hexmap_file_path.get(),
             "HEXMAP_SIZE": self.hexmap_size.get()[0],
-            "HEXMAP_OFFSET": self.hexmap_offset.get(),
-            "HEXMAP_START": self.hexmap_start.get(),
+            "HEXMAP_OFFSET": Coordinate(*self.hexmap_offset.get()),
+            "HEXMAP_START": Coordinate(*self.hexmap_start.get()),
         }
 
         for key, value in data.items():
@@ -394,6 +410,18 @@ class SettingsFrame(ttk.Frame):
 
         self.controller.update_settings()
         self.controller.show_frame(StartFrame)
+
+    def create_path_entry(self, label_text: str, initial_value: Path):
+        """Create a label and text entry widget for file paths with specific width."""
+        frame = ttk.Frame(self)
+        ttk.Label(frame, text=label_text).grid(row=0, column=0, padx=5, sticky="w")
+        entry = ttk.Entry(frame, width=150)
+        entry.insert(0, str(initial_value))
+        entry.grid(row=0, column=1, sticky="ew")
+        frame.grid_rowconfigure(0, weight=1)
+        frame.grid_columnconfigure(1, weight=1)
+        frame.pack(pady=5, fill=tk.X)
+        return entry
 
 
 class CoordinateEntry(ttk.Frame):

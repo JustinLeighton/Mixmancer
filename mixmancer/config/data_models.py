@@ -49,7 +49,7 @@ class Coordinate(BaseModel):
         return f"Coordinate(x={self.x}, y={self.y})"
 
     def __str__(self) -> str:
-        return f"{self.x}, {self.y}"
+        return f"{self.x},{self.y}"
 
     def __add__(self, other: "Coordinate") -> "Coordinate":
         return Coordinate(x=self.x + other.x, y=self.y + other.y)

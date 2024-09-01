@@ -1,11 +1,13 @@
 import pygame
 import math
 from PIL import Image
+from pathlib import Path
+
 from numpy import arange, linspace, float_
 from numpy.typing import NDArray
-from mixmancer.config.data_models import Coordinate
-
 from scipy import interpolate  # type: ignore[reportMissingTypeStubs]
+
+from mixmancer.config.data_models import Coordinate
 
 
 class HexMap:
@@ -28,7 +30,7 @@ class HexMap:
 
     def __init__(
         self,
-        image_path: str,
+        image_path: Path,
         resolution: Coordinate,
         hex_size: int,
         offset: Coordinate,
@@ -109,7 +111,7 @@ class HexMap:
 
     def hex_points(self):
         """Calculate the points of a hexagon to indicate the players location."""
-        x, y = self.resolution.divide(2)()
+        x, y = (self.resolution / 2)()
         pad = 1
         return [
             (x - self.hex_size / 2 - pad, y - self.side_length / 2 - pad),
@@ -130,7 +132,7 @@ class HexMap:
         Returns:
             bool: True if on screen, False otherwise.
         """
-        screen = pygame.Rect(*(self.location_pixel - self.resolution.divide(2))(), *self.resolution())
+        screen = pygame.Rect(*(self.location_pixel - self.resolution / 2)(), *self.resolution())
         return pygame.Rect(pixel_coordinates()).colliderect(screen)
 
     def normalize_pixel_location(self, pixel_coordinates: Coordinate) -> Coordinate:
@@ -142,7 +144,7 @@ class HexMap:
         Returns:
             Coordinate: The normalized pixel coordinates (x, y).
         """
-        return (pixel_coordinates - self.location_pixel + self.resolution).divide(2)
+        return (pixel_coordinates - self.location_pixel + self.resolution) / 2
 
     def read_history(self, file_location: str) -> list[Coordinate]:
         """Read historical grid coordinates from file.
@@ -285,5 +287,5 @@ def draw_spline_curve(
     width: int = 2,
 ) -> None:
     xi, yi = interpolate_curve(x, y, num_points)
-    points = list(zip(xi, yi))
-    pygame.draw.lines(surface, color, False, points, width)
+    points = list(zip(xi, yi))  # type: ignore
+    pygame.draw.lines(surface, color, False, points, width)  # type: ignore

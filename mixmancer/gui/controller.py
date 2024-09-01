@@ -12,6 +12,7 @@ from mixmancer.config.settings import (
     get_hexmap_size,
     get_hexmap_offset,
     get_hexmap_start,
+    get_hexmap_path,
 )
 
 
@@ -22,7 +23,7 @@ class Controller(tk.Tk):
         super().__init__()
         self.configure_theme()
         self.settings_path = "mixmancer/config/settings.json"
-        self.hexmap_path = "assets/map/map.png"
+        self.hexmap_path = get_hexmap_path()
 
         self.container = ttk.Frame(self, style="Custom.TFrame")
         self.container.pack(fill=tk.BOTH, expand=True)

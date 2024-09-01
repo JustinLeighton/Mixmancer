@@ -17,6 +17,9 @@ def set_env_default(key: str) -> str:
         "APP_RESOLUTION": "500, 500",
         "PROJECTOR_RESOLUTION": "1280, 900",
         "PROJECTOR_DISPLAY": "1",
+        "IMAGE_PATH": "assets/img",
+        "MUSIC_PATH": "assets/music",
+        "SFX_PATH": "assets/sfx",
         "HEXMAP_PATH": "assets/map/map.png",
         "HEXMAP_OFFSET": "8, 85",
         "HEXMAP_START": "143, 18",
@@ -55,7 +58,8 @@ def get_env_variable(key: str, var_type: Type[T] = str) -> T:
 
 
 def set_env_variable(key: str, value: Any):
-    set_key(ENV_FILE, key.upper(), str(value))
+    value_str = str(value).replace("\\", "/")
+    set_key(ENV_FILE, key.upper(), value_str)
 
 
 def get_app_resolution() -> Coordinate:
@@ -68,6 +72,18 @@ def get_projector_resolution() -> Coordinate:
 
 def get_projector_display() -> int:
     return get_env_variable("PROJECTOR_DISPLAY", int)
+
+
+def get_image_path() -> Path:
+    return get_env_variable("IMAGE_PATH", Path)
+
+
+def get_music_path() -> Path:
+    return get_env_variable("MUSIC_PATH", Path)
+
+
+def get_sfx_path() -> Path:
+    return get_env_variable("SFX_PATH", Path)
 
 
 def get_hexmap_path() -> Path:
@@ -88,7 +104,5 @@ def get_hexmap_size() -> int:
 
 def get_colors() -> Colors:
     values = get_env_variable("COLORS", list[str])
-    print(values)
     colors = Colors.from_list(values)
-    print(colors)
-    return Colors.from_list(values)
+    return colors
