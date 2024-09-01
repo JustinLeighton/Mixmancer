@@ -20,7 +20,7 @@ class Mixer:
         self.current_track = music_path
         music_file = self.load_music_into_memory(self.current_track)
         pygame.mixer.music.load(music_file)
-        pygame.mixer.music.play()
+        pygame.mixer.music.play(loops=-1)
 
     def load_music_into_memory(self, music_path: str):
         """Load music file into memory"""
