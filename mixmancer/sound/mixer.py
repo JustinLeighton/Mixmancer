@@ -1,7 +1,10 @@
-import pygame
-from typing import Callable
-from mixmancer.exceptions import InvalidVolumeError, InvalidChannelError
 import os
+import io
+from typing import Callable
+
+import pygame
+
+from mixmancer.exceptions import InvalidVolumeError, InvalidChannelError
 
 
 class Mixer:
@@ -14,12 +17,15 @@ class Mixer:
 
     def play_music(self, music_path: str):
         """Plays an .mp3 file through pygame music mixer"""
-        # Load the music into memory
-        # with open(music_path, "rb") as f:
-        #    music_data = f.read()
         self.current_track = music_path
-        pygame.mixer.music.load(self.current_track)
+        music_file = self.load_music_into_memory(self.current_track)
+        pygame.mixer.music.load(music_file)
         pygame.mixer.music.play()
+
+    def load_music_into_memory(self, music_path: str):
+        """Load music file into memory"""
+        with open(music_path, "rb") as file:
+            return io.BytesIO(file.read())
 
     def get_current_track(self, max_length: int = 15) -> str:
         """Returns current music track playing"""
