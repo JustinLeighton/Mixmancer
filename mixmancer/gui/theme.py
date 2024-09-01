@@ -1,7 +1,7 @@
 from tkinter import ttk
 from PIL import Image, ImageTk
 from typing import Any, Optional, Callable
-from mixmancer.config.settings import Settings
+from mixmancer.config.settings import get_colors
 
 
 class CustomTheme:
@@ -13,44 +13,44 @@ class CustomTheme:
         y (int, optional): vertical pixal placement. Defaults to 0.
     """
 
-    def __init__(self, settings: Settings):
+    def __init__(self):
         self.style = ttk.Style()
-        self.color = settings.color
+        self.color = get_colors()
         self.font_size: int = 12
         self.padding: tuple[int, int] = (5, 5)
         self.borderwidth: int = 0
 
         self.style.theme_use("clam")
 
-        frame_config: dict[str, Any] = {"background": self.color["grey"]}
+        frame_config: dict[str, Any] = {"background": self.color.grey}
         button_config: dict[str, Any] = {
-            "background": self.color["grey"],
-            "foreground": self.color["white"],
+            "background": self.color.grey,
+            "foreground": self.color.white,
             "font": ("Helvetica", self.font_size),
             "padding": self.padding,
             "relief": "raised",
         }
         label_config: dict[str, Any] = {
-            "foreground": self.color["white"],
-            "background": self.color["grey"],
+            "foreground": self.color.white,
+            "background": self.color.grey,
             "font": ("Helvetica", self.font_size),
         }
         scale_config: dict[str, Any] = {
-            "background": self.color["grey"],
-            "troughcolor": self.color["purple"],
-            "slidercolor": self.color["white"],
+            "background": self.color.grey,
+            "troughcolor": self.color.purple,
+            "slidercolor": self.color.white,
             "borderwidth": self.borderwidth,
         }
         entry_config: dict[str, Any] = {
-            "background": self.color["grey"],
-            "foreground": self.color["white"],
+            "background": self.color.grey,
+            "foreground": self.color.white,
             "font": ("Helvetica", self.font_size),
             "padding": self.padding,
             "borderwidth": self.borderwidth,
         }
         square_button_config: dict[str, Any] = {
-            "background": self.color["grey"],
-            "foreground": self.color["white"],
+            "background": self.color.grey,
+            "foreground": self.color.white,
             "font": ("Helvetica", self.font_size),
             "padding": self.padding,
             "relief": "raised",
@@ -142,7 +142,7 @@ class SquareButton(ttk.Button):
             img = Image.open(image_path)
             img.thumbnail((20, 20))
             self.photo_image = ImageTk.PhotoImage(img)
-            self.config(image=self.photo_image, compound="center")
+            self.config(image=self.photo_image, compound="center")  # type: ignore
             self.image = self.photo_image
 
         if self.command:

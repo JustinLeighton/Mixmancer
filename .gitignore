@@ -9,6 +9,7 @@ __pycache__
 coverage.xml
 .vscode
 .pytest_cache
+.env
 htmlcov*
 
 *map.png

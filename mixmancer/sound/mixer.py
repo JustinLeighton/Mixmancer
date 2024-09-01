@@ -14,6 +14,9 @@ class Mixer:
 
     def play_music(self, music_path: str):
         """Plays an .mp3 file through pygame music mixer"""
+        # Load the music into memory
+        # with open(music_path, "rb") as f:
+        #    music_data = f.read()
         self.current_track = music_path
         pygame.mixer.music.load(self.current_track)
         pygame.mixer.music.play()

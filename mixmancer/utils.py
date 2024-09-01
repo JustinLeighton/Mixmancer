@@ -54,3 +54,12 @@ def calculate_resized_dimensions(image_dimensions: Coordinate, target_location: 
         return Coordinate(target_location.x, int(target_location.x / aspect_ratio))
     else:
         return Coordinate(int(target_location.y * aspect_ratio), target_location.y)
+
+
+def str_to_coordinate(value: str) -> Coordinate:
+    """Convert a string to a Coordinate instance."""
+    try:
+        x_str, y_str = value.split(",")
+        return Coordinate(x=int(x_str), y=int(y_str))
+    except ValueError:
+        raise ValueError(f"Cannot convert {value} to Coordinate")

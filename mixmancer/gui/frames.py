@@ -8,6 +8,16 @@ from typing import Literal, Union, Any, Callable
 from mixmancer.gui.controller import Controller
 from mixmancer.gui.theme import CustomButton, CustomImage, CustomSlider, CustomLabel, SquareButton
 from mixmancer.utils import check_file_exists
+from mixmancer.config.settings import (
+    get_projector_resolution,
+    get_app_resolution,
+    get_hexmap_offset,
+    get_hexmap_size,
+    get_hexmap_start,
+    get_projector_display,
+    set_env_variable,
+)
+from mixmancer.config.data_models import Coordinate
 
 
 class StartFrame(ttk.Frame):
@@ -89,7 +99,7 @@ class StartFrame(ttk.Frame):
         """Update preview image in app window"""
         if self.controller.image_preview is not None:  # type: ignore[reportUnnecessaryComparison]
             self.controller.update_thumnail_image()
-            self.label_image_preview.configure(image=self.controller.image_preview)
+            self.label_image_preview.configure(image=self.controller.image_preview)  # type: ignore
 
     def update_labels(self):
         """Update label text in app window"""
@@ -103,15 +113,16 @@ class StartFrame(ttk.Frame):
             event (Literal[tk.EventType.ResizeRequest]): Tkinter window resize event
         """
         if event.widget == self:  # type: ignore[reportUnknownMemberType]
-            if (event.width, event.height) != self.controller.settings.app_resolution:  # type: ignore[reportUnknownMemberType]
-                self.controller.settings.set_app_resolution(event.width, event.height)  # type: ignore[reportUnknownMemberType]
+            if (event.width, event.height) != get_app_resolution():  # type: ignore[reportUnknownMemberType]
+                set_env_variable("APP_RESOLUTION", Coordinate(event.width, event.height))  # type: ignore[reportUnknownMemberType]
                 self.controller.image_thumbnail_dimensions = self.get_preview_image_size()
                 self.update_preview_image()
 
     def get_preview_image_size(self, padding: int = 5) -> tuple[int, int]:
         """Get size available for preview image within app window"""
-        image_width: int = int(self.controller.settings.get_app_resolution().x - 150 - padding * 2)
-        image_height: int = int(self.controller.settings.get_app_resolution().y - 5 - padding * 2)
+        app_resolution = get_app_resolution()
+        image_width: int = int(app_resolution.x - 150 - padding * 2)
+        image_height: int = int(app_resolution.y - 5 - padding * 2)
         if image_width < 100 or image_height < 100:
             image_width, image_height = 100, 100
         return image_width, image_height
@@ -167,7 +178,7 @@ class ImageFrame(ttk.Frame):
             img.thumbnail((100, 100))
             tk_img = ImageTk.PhotoImage(img)
             btn = tk.Button(
-                self.inner_frame, image=tk_img, command=lambda name=image_path: self.thumbnail_selected(name)
+                self.inner_frame, image=tk_img, command=lambda name=image_path: self.thumbnail_selected(name)  # type: ignore
             )
             btn.image = tk_img  # type: ignore[reportAttributeAccessIssue]
             btn.configure(text=image_file)
@@ -347,21 +358,20 @@ class SettingsFrame(ttk.Frame):
     def __init__(self, parent: ttk.Frame, controller: Controller):
         ttk.Frame.__init__(self, parent, style="Custom.TFrame")
         self.controller = controller
-        self.settings = self.controller.settings
 
         # Header
         ttk.Label(self, text="Settings").pack()
 
         # Projector
         ttk.Label(self, text="\nProjector").pack(anchor="w")
-        self.resolution = CoordinateEntry(self, "Resolution", self.settings.projector_resolution)
-        self.display = CoordinateEntry(self, "Display", tuple([self.settings.display]))
+        self.resolution = CoordinateEntry(self, "Resolution", get_projector_resolution()())
+        self.display = CoordinateEntry(self, "Display", tuple([get_projector_display()]))
 
         # Hexmap
         ttk.Label(self, text="\nHexmap").pack(anchor="w")
-        self.hexmap_size = CoordinateEntry(self, "Hex Size", tuple([self.settings.hex_size]))
-        self.hexmap_offset = CoordinateEntry(self, "Offset", self.settings.hexmap_offset)
-        self.hexmap_start = CoordinateEntry(self, "Start", self.settings.hexmap_start)
+        self.hexmap_size = CoordinateEntry(self, "Hex Size", tuple([get_hexmap_size()]))
+        self.hexmap_offset = CoordinateEntry(self, "Offset", get_hexmap_offset()())
+        self.hexmap_start = CoordinateEntry(self, "Start", get_hexmap_start()())
 
         # Buttons
         button_frame = ttk.Frame(self, style="Custom.TFrame")
@@ -370,12 +380,19 @@ class SettingsFrame(ttk.Frame):
         button_frame.pack(pady=10)
 
     def update_settings(self):
-        self.settings.projector_resolution = self.resolution.get()  # type: ignore
-        self.settings.display = self.display.get()[0]
-        self.settings.hex_size = self.hexmap_size.get()[0]
-        self.settings.hexmap_offset = self.hexmap_offset.get()  # type: ignore
-        self.settings.hexmap_start = self.hexmap_start.get()  # type: ignore
-        self.controller.update_settings(self.settings)
+
+        data: dict[str, Any] = {
+            "PROJECTOR_RESOLUTION": Coordinate(*self.resolution.get()),
+            "PROJECTOR_DISPLAY": self.display.get()[0],
+            "HEXMAP_SIZE": self.hexmap_size.get()[0],
+            "HEXMAP_OFFSET": self.hexmap_offset.get(),
+            "HEXMAP_START": self.hexmap_start.get(),
+        }
+
+        for key, value in data.items():
+            set_env_variable(key, value)
+
+        self.controller.update_settings()
         self.controller.show_frame(StartFrame)
 
 

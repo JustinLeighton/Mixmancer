@@ -7,6 +7,7 @@ Created on Thu May 18 23:31:42 2023
 
 import threading
 import argparse
+from dotenv import load_dotenv
 
 import pygame
 
@@ -43,6 +44,8 @@ class App(Controller):
 
 
 if __name__ == "__main__":
+    load_dotenv()
+
     parser = argparse.ArgumentParser(description="Run the app with or without API thread.")
     parser.add_argument("-local", action="store_true", help="Run the app without API thread")
     args = parser.parse_args()
