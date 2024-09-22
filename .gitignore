@@ -12,4 +12,6 @@ coverage.xml
 .env
 htmlcov*
 
+assets/music/*.mp3
 *map.png
+*.DS_Store

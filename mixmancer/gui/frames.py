@@ -178,16 +178,17 @@ class ImageFrame(ttk.Frame):
         # Display thumbnails of each image in a grid pattern
         self.thumbnail_buttons: list[tk.Button] = []
         for image_file in image_files:
-            image_path = os.path.join(img_dir, image_file)
-            img = Image.open(image_path)
-            img.thumbnail((100, 100))
-            tk_img = ImageTk.PhotoImage(img)
-            btn = tk.Button(
-                self.inner_frame, image=tk_img, command=lambda name=image_path: self.thumbnail_selected(name)  # type: ignore
-            )
-            btn.image = tk_img  # type: ignore[reportAttributeAccessIssue]
-            btn.configure(text=image_file)
-            self.thumbnail_buttons.append(btn)
+            if not image_file.startswith('._'): 
+                image_path = os.path.join(img_dir, image_file)
+                img = Image.open(image_path)
+                img.thumbnail((100, 100))
+                tk_img = ImageTk.PhotoImage(img)
+                btn = tk.Button(
+                    self.inner_frame, image=tk_img, command=lambda name=image_path: self.thumbnail_selected(name)  # type: ignore
+                )
+                btn.image = tk_img  # type: ignore[reportAttributeAccessIssue]
+                btn.configure(text=image_file)
+                self.thumbnail_buttons.append(btn)
         self.layout_thumbnails()
 
     def layout_thumbnails(self):
@@ -208,6 +209,7 @@ class ImageFrame(ttk.Frame):
         """Selection function when image is selected"""
         self.controller.display_image_file(image_path)
         self.controller.show_frame(StartFrame)
+        self.search_var.set("")
 
     def on_mouse_wheel(self, event: Literal[tk.EventType.MouseWheel]):
         """Scrolls frame when called"""
@@ -264,6 +266,7 @@ class SearchableFrame(ttk.Frame):
         """Function to execute when a sfx file button is selected"""
         self.callback(selectable_file)
         self.controller.show_frame(StartFrame)
+        self.search_var.set("")
 
     def filter_sfx_list(self, *args: Any):
         """Filter the list of sound effects based on the search query"""
